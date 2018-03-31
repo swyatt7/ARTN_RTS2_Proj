@@ -12,6 +12,19 @@ import sys
 import subprocess
 from lxml import html
 import re
+from astropy.coordinates import Angle
+from astropy import units as u
+
+global importRTS2
+importRTS2 = False
+try:
+    import rts2
+    rts2.createProxy(url="http://localhost:8889")
+    importRTS2 = True
+    print("RTS2 succesfully imported")
+except:
+    print("RTS2 not imported whoopsy")
+    importRTS2 = False
 
 app = Flask(__name__)
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -85,7 +98,7 @@ def readlotis(fullpath):
     for line in fi:
         splitline = line.split()
         offset = findoffset(splitline)
-        if offset != -99:
+        if offset != -99 and line[0] is not "#":
             name = splitline[name_i - offset]
             ra = formatcoord(splitline[ra_i - offset])
             dec = formatcoord(splitline[dec_i - offset])
@@ -208,29 +221,29 @@ def getqueuefilelist(filename):
 def root():
     """Main page renders the index.html page"""
     return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
-                           passwd=app.config['BASIC_AUTH_PASSWORD'])
+                           passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2)
 
 
 @app.route('/index')
 def index():
-    return render_template('index.html', files=getuploads())
+    return render_template('index.html', files=getuploads(), importRTS2=importRTS2)
 
 
 @app.route('/home')
 def home():
     return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
-                           passwd=app.config['BASIC_AUTH_PASSWORD'])
+                           passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2)
 
 
 @app.route('/about')
 def about():
-    return render_template('index.html', files=getuploads())
+    return render_template('index.html', files=getuploads(), importRTS2=importRTS2)
 
 
 @app.route('/edit_queue', methods=['POST'])
 def edit_queue():
     filename = request.form["edit_queue"]
-    return render_template('edit_queue.html', queue=filename.split('.queue')[0])
+    return render_template('edit_queue.html', queue=filename.split('.queue')[0], importRTS2=importRTS2)
 
 
 @app.route('/load', methods=['POST'])
@@ -256,25 +269,27 @@ def load():
 def showfile():
     if 'lotisweb' in request.form.keys():
         output, filename = readfromweb()
-        return render_template('index.html', files=getuploads(), output=output)
+        return render_template('index.html', files=getuploads(), output=output, importRTS2=importRTS2)
     filename = request.form["load_queue"]
     target = os.path.join(APP_ROOT, "uploads")
     fullpath = target + "/" + filename
     if "display" in request.form.keys():
         output = readqueue(fullpath)
-        return render_template('index.html', files=getuploads(), output=output)
+        return render_template('index.html', files=getuploads(), output=output, importRTS2=importRTS2)
     if 'edit' in request.form.keys():
         names = getobjectnames(fullpath)
         data = readqueue(fullpath)
-        return render_template('edit_queue.html', queue=filename.split('.queue')[0], object_names=names, data=data)
+        return render_template('edit_queue.html', queue=filename.split('.queue')[0], object_names=names, data=data, importRTS2=importRTS2)
     if 'rts2queue' in request.form.keys():
-        data = readqueue(fullpath)
-        targetids = []
-        for d in data:
-            targetid = getrts2targetid(d)
-            setrts2observscript(d, targetid)
-            targetids.append(targetid)
-        return render_template('index.html', files=getuploads(), rts2queue=True)
+        if importRTS2:
+            data = readqueue(fullpath)
+            targetids = []
+            for d in data:
+                targetid = getrts2targetid(d)
+                setrts2observscript(d, targetid)
+                targetids.append(targetid)
+            setrts2queue(targetids)
+        return render_template('index.html', files=getuploads(), rts2queue=importRTS2, importRTS2=importRTS2)
 
 
 def setrts2queue(targetids):
@@ -296,32 +311,19 @@ def setrts2observscript(queueobj, targetid):
         script += (tmp * int(obs.amount))
     cmd = "rts2-target -c C0 --lunarDistance 15: --airmass :2.2 -s \"{}\" {}".format(script, str(targetid))
     print(cmd)
-    # subprocess.call(cmd, shell=True)
-
-
-def createnewrtstarget(d):
-    cmd = "python /home/scott/git-clones/rts2/scripts/newtarget.py --create {} {} {}".format(d.ra, d.dec, d.name)
-    print(cmd)
-    # subprocess.call(cmd, shell=True)
+    #subprocess.call(cmd, shell=True)
 
 
 def getrts2targetid(queueobj):
-    cmd = "rts2-targetlist | grep -i {} > tmp.txt".format(queueobj.name)
-    print(cmd)
-    # subprocess.call(cmd, shell=True)
-    fi = open("tmp.txt")
-    targetid = 0
-    for row in fi:
-        splitrow = row.split()
-        if any(x for x in splitrow if str.lower(queueobj.name) in str.lower(x)):
-            targetid = splitrow[tid_index]
-            return targetid
-    fi.close()
-    cmd = "rm tmp.txt"
-    # subprocess.call(cmd, shell=True)
-    createnewrtstarget(queueobj)
-    time.sleep(10)
-    return getrts2targetid(queueobj)
+    targetid = None
+    target = rts2.target.get(queueobj.name)
+    if target is None:
+        ra = Angle(queueobj.ra, unit=u.hour)
+        dec = Angle(queueobj.dec, unit=u.deg)
+        targetid = rts2.create_target(queueobj.name, ra.deg, dec.deg)
+    else:
+        targetid = target[0][0]
+    return targetid
 
 
 @app.route('/editqueuedata', methods=['POST'])
