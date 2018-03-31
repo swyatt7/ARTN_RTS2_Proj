@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>RTS2QM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+{% include "bootstrap_top.html" %}
+
+
+<body>
+    <header>
+      <div class="container">
+        <h1 class="logo">RTS2 Home</h1>
+        <strong><nav>
+          <ul class="menu">
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('index') }}">Queue Manager</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+          </ul>
+        </nav></strong>
+      </div>
+    </header>
+    <div id="rts2_status" >
+         {% include "rts2_status.html"  %}
+    </div>
+
+    <div id="weather" class="tab-pane fade in active" >
+         {% include "weather.html"  %}
+    </div>
+
+</body>
+
+</html>

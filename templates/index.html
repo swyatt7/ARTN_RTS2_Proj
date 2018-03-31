@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>RTS2QM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <header>
+      <div class="container">
+        <h1 class="logo">RTS2 Queue Manager</h1>
+        <strong><nav>
+          <ul class="menu">
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('index') }}">Queue Manager</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+          </ul>
+        </nav></strong>
+      </div>
+    </header>
+    <div style="width: 50%; float: left;">
+        <div id="lefthalf">
+            <form action="{{ url_for('load') }}" method="POST" enctype="multipart/form-data">
+                SupeLotis Queue File:
+                <br><input type="file" name="queue" accept="*/*"><br>
+                <p><input type="submit" value="Load"></p>
+            </form>
+        </div>
+        <div id="righthalf">
+            {% if files %}
+                Uploaded Queues
+                <form action="{{ url_for('showfile') }}" method="POST" enctype="multipart/form-data">
+                    <p><input type="submit" name="lotisweb" value="Read Lotis Queue from web"></p>
+                    <select name="load_queue">
+                    {% for file in files %}
+                        <option value="{{ file }}">{{ file }}</option>
+                    {% endfor %}
+                    </select>
+                    <p><input type="submit" name="display" value="Display"> <input type="submit" name="edit" value="Edit"> <input type="submit" name="rts2queue" value="Populate RTS2 Queue"></p>
+                </form>
+                {% if output %}
+                    <div style="outline: black solid">
+                    {% for line in output %}
+                        <p style="font-family: monospace; font-size: small">Queue Object: {{ line.name }}</p>
+                        <p style="font-family: monospace; font-size: xx-small">RA: {{ line.ra }}</p>
+                        <p style="font-family: monospace; font-size: xx-small">DEC: {{ line.dec }}</p>
+                        {% for obs in line.observation_info %}
+                            <p style="font-family: monospace; font-size: xx-small">    Filter: {{ obs.filter }}, Exposure Time: {{ obs.exptime }}, Amount: {{ obs.amount }}</p>
+                        {% endfor %}
+                        <p></p>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div style="width: 50%; float: right">
+        {% if rts2queue %}
+        RTS2 Queue POPULATED
+        {% endif %}
+    </div>
+</body>
+</html>

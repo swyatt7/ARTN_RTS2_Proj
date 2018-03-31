@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>RTS2QM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <header>
+      <div class="container">
+        <h1 class="logo">RTS2 Queue Manager</h1>
+        <strong><nav>
+          <ul class="menu">
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('index') }}">Queue Manager</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+          </ul>
+        </nav></strong>
+      </div>
+    </header>
+    Editing {{ queue }}
+    <div style="width: 50%; float: left;">
+    <div id="lefthalf" style="float: left">
+        Queue Data
+        <div style="outline: black solid">
+            {% for line in data %}
+                <p style="font-family: monospace; font-size: small">Queue Object: {{ line.name }}</p>
+                <p style="font-family: monospace; font-size: xx-small">RA: {{ line.ra }}</p>
+                <p style="font-family: monospace; font-size: xx-small">DEC: {{ line.dec }}</p>
+                {% for obs in line.observation_info %}
+                    <p style="font-family: monospace; font-size: xx-small">    Filter: {{ obs.filter }}, Exposure Time: {{ obs.exptime }}, Amount: {{ obs.amount }}</p>
+                {% endfor %}
+                <p></p>
+            {% endfor %}
+        </div>
+    </div>
+    <div id="righthalf">
+        Edit Data
+        <form action="{{ url_for('editqueuedata',queuefile=queue) }}" method="POST" enctype="multipart/form-data">
+            <select name="editname">
+            {% for name in object_names %}
+                <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+            </select>
+            <p><input type="submit" name="edit" value="Edit"> <input type="submit" name="remove" value="Remove"> <input type="submit" name="addnew" value="Add New"></p>
+        </form>
+    </div>
+    </div>
+    <div style="width: 50%; float: right">
+        {% if editdata %}
+            <form action="{{ url_for('updatequeuedata', editname=editdata.name, queuefile=queue) }}" method="POST" enctype="multipart/form-data">
+                Name: <input type="text" name="name" value={{ editdata.name }}><br>
+                RA | DEC (Decimal or HH:MM:SS.S): <input type="text" name="ra" value={{ editdata.ra }}><input type="text" name="dec" value={{ editdata.dec }}><br>
+                {% for obsinfo in editdata.observation_info %}
+                    Filter <input type="text" name=filter value={{ obsinfo.filter }}><br>
+                    Exposure Time <input type="text" name="exptime" value={{ obsinfo.exptime }}><br>
+                    Amount <input type="text" name="amount" value={{ obsinfo.amount }}><br>
+                {% endfor %}
+                Filter <input type="text" name=filter value=""><br>
+                Exposure Time <input type="text" name="exptime" value=""><br>
+                Amount <input type="text" name="amount" value=""><br>
+                <p><input type="submit" name="updateexisting" value="Update"></p>
+            </form>
+        {% elif addnew %}
+            <form action="{{ url_for('updatequeuedata', editname="new", queuefile=queue) }}" method="POST" enctype="multipart/form-data">
+                Name: <input type="text" name="name" value=""><br>
+                RA | DEC (Decimal or HH:MM:SS.S): <input type="text" name="ra" value=""><input type="text" name="dec" value=""><br>
+                {% if editdata %}
+                {% for obsinfo in editdata.observation_info %}
+                    Filter <input type="text" name=filter value={{ obsinfo.filter }}><br>
+                    Exposure Time <input type="text" name="exptime" value={{ obsinfo.exptime }}><br>
+                    Amount <input type="text" name="amount" value={{ obsinfo.amount }}><br>
+                {% endfor %}
+                {% endif %}
+                Filter <input type="text" name=filter value=""><br>
+                Exposure Time <input type="text" name="exptime" value=""><br>
+                Amount <input type="text" name="amount" value=""><br>
+                <p><input type="submit" name="addexposobj" value="Add another exposure"><input type="submit" name="updatenew" value="Update"></p>
+            </form>
+        {% endif %}
+    </div>
+</body>
+</html>
