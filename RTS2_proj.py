@@ -17,9 +17,12 @@ from astropy import units as u
 
 global importRTS2
 importRTS2 = False
+global prx
+prx = None
 try:
     import rts2
-    rts2.createProxy(url="http://localhost:8889")
+    rts2.createProxy(url='http://localhost:8889')
+    prx = rts2.createProxy(url='http://localhost:8889')
     importRTS2 = True
     print("RTS2 succesfully imported")
 except:
@@ -50,6 +53,25 @@ amounts_i = 8
 tid_index = 0
 type_dict = {"UVOT": 0, "AzTEC": 1, "SPOL": 1, "STAND": 3}
 
+class Rts2Queue:
+	def __init__(self, _name):
+	    self.name = _name
+	    self.queueitems = self.populate()
+	def populate(self):
+	    queue = rts2.Queue(prx, self.name)
+            queue.load()
+	    queueitems = []
+            for p in queue.entries:
+                targ = rts2.target.get(p.id)
+		queueitems.append(Rts2QueueItem(targ[0][1], targ[0][0]))
+	    return queueitems
+
+
+class Rts2QueueItem:
+   def __init__(self, _name, _id):
+	self.name = _name
+	self.id = _id
+
 
 class QueueObject:
     def __init__(self, _name, _ra, _dec, _type, _obs_infos):
@@ -74,6 +96,11 @@ class ObservationInfo:
         self.filter = _filter
         self.exptime = _exptime
 
+def populaterts2queues(queues=['plan','manual','simul']):
+	Queues = []
+	for q in queues:
+		Queues.append(Rts2Queue(q))
+	return Queues
 
 def findoffset(sr):
     for key in type_dict.keys():
@@ -219,9 +246,12 @@ def getqueuefilelist(filename):
 @app.route('/')
 @basic_auth.required
 def root():
+    queues = []
+    if importRTS2:
+	queues = populaterts2queues()
     """Main page renders the index.html page"""
     return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
-                           passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2)
+                           passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2, queues=queues)
 
 
 @app.route('/index')
@@ -231,8 +261,11 @@ def index():
 
 @app.route('/home')
 def home():
+    queues = []
+    if importRTS2:
+        queues = populaterts2queues()
     return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
-                           passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2)
+                           passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2, queues=queues)
 
 
 @app.route('/about')
@@ -299,7 +332,7 @@ def setrts2queue(targetids):
             targetstring += " {}".format(str(iid))
         cmd = "rts2-queue --queue plan --clear{}".format(targetstring)
         print(cmd)
-        # subprocess.call(cmd, shell=True)
+        subprocess.call(cmd, shell=True)
 
 
 def setrts2observscript(queueobj, targetid):
@@ -311,16 +344,19 @@ def setrts2observscript(queueobj, targetid):
         script += (tmp * int(obs.amount))
     cmd = "rts2-target -c C0 --lunarDistance 15: --airmass :2.2 -s \"{}\" {}".format(script, str(targetid))
     print(cmd)
-    #subprocess.call(cmd, shell=True)
+    subprocess.call(cmd, shell=True)
 
 
 def getrts2targetid(queueobj):
+    print(queueobj.name)
     targetid = None
     target = rts2.target.get(queueobj.name)
-    if target is None:
+    print(target)
+    if len(target) == 0:
+	
         ra = Angle(queueobj.ra, unit=u.hour)
         dec = Angle(queueobj.dec, unit=u.deg)
-        targetid = rts2.create_target(queueobj.name, ra.deg, dec.deg)
+        targetid = rts2.target.create(queueobj.name, ra.deg, dec.deg)
     else:
         targetid = target[0][0]
     return targetid

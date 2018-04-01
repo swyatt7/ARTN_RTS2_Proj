@@ -22,14 +22,33 @@
         </nav></strong>
       </div>
     </header>
-    <div id="rts2_status" >
-         {% include "rts2_status.html"  %}
-    </div>
+    <div style="width: 50%; float: left;">
+        <div id="rts2_status" >
+             {% include "rts2_status.html"  %}
+        </div>
 
-    <div id="weather" class="tab-pane fade in active" >
-         {% include "weather.html"  %}
+        <div id="weather" class="tab-pane fade in active" >
+             {% include "weather.html"  %}
+        </div>
     </div>
-
+    <div style="width: 50%; float: right;">
+    	{% if queues %}
+	   <div>
+	   	{% for q in queues %}
+		   <p style="font-family: monospace; font-size: 16pt">Queue: {{ q.name }}</p>
+		   {% if q.queueitems == [] %}
+		   	<p style="font-family: monospace; fontsize: 12pt">None</p>
+		   {% endif %}
+		   {% if q.queueitems != [] %}
+		    	{% for qi in q.queueitems%}
+		            <p style="font-family: monospace; fontsize: 12pt">{{ qi.name }}</p>
+		    	{% endfor %}
+                   {% endif %}
+		   <p></p>
+	  	{% endfor %}
+	    </div>
+        {% endif %}
+    </div>
 </body>
 
 </html>
