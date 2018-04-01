@@ -19,9 +19,10 @@ global importRTS2
 importRTS2 = False
 global prx
 prx = None
+
+import rts2
+print("imported rts2")
 try:
-    import rts2
-    rts2.createProxy(url='http://localhost:8889')
     prx = rts2.createProxy(url='http://localhost:8889')
     importRTS2 = True
     print("RTS2 succesfully imported")
@@ -52,6 +53,8 @@ filt_i = 9
 amounts_i = 8
 tid_index = 0
 type_dict = {"UVOT": 0, "AzTEC": 1, "SPOL": 1, "STAND": 3}
+
+
 
 class Rts2Queue:
 	def __init__(self, _name):
