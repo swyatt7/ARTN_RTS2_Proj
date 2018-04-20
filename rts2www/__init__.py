@@ -14,6 +14,8 @@ from lxml import html
 import re
 from astropy.coordinates import Angle
 from astropy import units as u
+import sys
+
 
 global importRTS2
 importRTS2 = False
@@ -21,28 +23,40 @@ global prx
 prx = None
 
 import rts2
-print("imported rts2")
-try:
-    prx = rts2.createProxy(url='http://localhost:8889')
-    importRTS2 = True
-    print("RTS2 succesfully imported")
-except:
-    print("RTS2 not imported whoopsy")
-    importRTS2 = False
+print( "imported rts2" )
+
+
 
 app = Flask(__name__)
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 app.static_folder = 'static'
 app.config.from_object(__name__)
 
-CONFIG_PATH = "/home/rts2obs/.mtnops"
-CONFIG_FILE = "flask_rts2.json"
-CONFIG_FD = open(os.path.join(CONFIG_PATH, CONFIG_FILE))
+if len( sys.argv ) == 1:
+
+	CONFIG_PATH = "/home/rts2obs/.mtnops"
+	CONFIG_FILE = "flask_rts2.json"
+	CONFIG_FD = open(os.path.join(CONFIG_PATH, CONFIG_FILE))
+
+else:
+	config_fd = open( sys.argv[1] )
+	
 CONFIG = json.load(CONFIG_FD)
 CONFIG_FD.close()
 app.config['BASIC_AUTH_USERNAME'] = CONFIG["username"]
 app.config['BASIC_AUTH_PASSWORD'] = CONFIG['password']
-basic_auth = BasicAuth(app)
+basic_auth = BasicAuth( app )
+
+
+try:
+    prx = rts2.createProxy( url='http://localhost:8889', username=CONFIG["username"], password=configs["password"])
+    importRTS2 = True
+    print("RTS2 succesfully imported")
+except:
+    print("RTS2 not imported whoopsy")
+    importRTS2 = False
+
+
 
 name_i = 11
 ra_i = 4
@@ -57,7 +71,7 @@ type_dict = {"UVOT": 0, "AzTEC": 1, "SPOL": 1, "STAND": 3}
 
 
 class Rts2Queue:
-	def __init__(self, _name):
+	def __init__( self, _name ):
 	    self.name = _name
 	    self.queueitems = self.populate()
 	def populate(self):
@@ -523,4 +537,4 @@ def boltwood_json():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=1080,debug=True)
+    app.run( host='0.0.0.0', port=1080, debug=True )
