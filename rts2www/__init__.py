@@ -4,6 +4,7 @@ from flask import render_template
 from flask import request
 from flask_basicauth import BasicAuth
 import requests
+from requests.auth import HTTPBasicAuth
 import json
 import glob
 import os
@@ -270,6 +271,9 @@ def root():
     return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
                            passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2, queues=queues)
 
+@app.route('/rts2_status.html')
+def rts2_status():
+	return render_template('rts2_status.html')
 
 @app.route('/index')
 def index():
@@ -440,7 +444,9 @@ def _get_device(device):
     returns json with device data or error message
     """
     try:
-        r = requests.get("http://localhost:8889/api/get?e=1&d={}".format(device))
+        r = requests.get(
+		"http://localhost:8889/api/get?e=1&d={}".format(device), 
+		auth=(CONFIG["username"], CONFIG['password'] ) )
         data = r.text
     except Exception as err:
         data = json.dumps({"error": str(err)})

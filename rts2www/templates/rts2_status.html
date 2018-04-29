@@ -23,8 +23,15 @@ $.ajax
 			var good_data = false;
 			if(dev in data)
 			{
-				if(valname in data[dev]["d"])
-					var good_data = true;
+				try
+				{
+					if(valname in data[dev]["d"])
+						var good_data = true;
+				}
+				catch(err)
+				{
+					console.log(err)
+				}
 			}
 
 			if( good_data)
