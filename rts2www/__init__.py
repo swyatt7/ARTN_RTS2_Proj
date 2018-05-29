@@ -16,7 +16,7 @@ import re
 from astropy.coordinates import Angle
 from astropy import units as u
 import sys
-from rts2solib import asteroid, stellar, rts2comm
+from rts2solib import asteroid, stellar, rts2comm, so_exposure
 
 global importRTS2
 importRTS2 = True
@@ -50,7 +50,7 @@ basic_auth = BasicAuth( app )
 
 
 try:
-    prx = rts2.createProxy( url='http://localhost:8889', username=CONFIG["username"], password=configs["password"])
+    prx = rts2.createProxy( url='http://localhost:8889', username=CONFIG["username"], password=CONFIG["password"])
     importRTS2 = True
     print("RTS2 succesfully imported")
 except:
@@ -105,7 +105,7 @@ class QueueObject:
         print("DEC: {}".format(self.dec))
         print("Observation Infos")
         for obsinfo in self.observation_info:
-            print("Filter: {}, Exposure Time: {}, Amount {}".format(obsinfo.filter, obsinfo.exptime, obsinfo.amount))
+            print("Filter: {}, Exposure Time: {}, Amount {}".format(obsinfo.filter, obsinfo.exptime, obsinfo.num_exposures))
 
 
 class ObservationInfo:
@@ -153,8 +153,8 @@ def readlotis(fullpath):
             objtype = splitline[type_i - offset]
             observationinfos = []
             for f in filters:
-                observationinfos.append(ObservationInfo(f, exptime, amounts))
-            a = QueueObject(name, ra, dec, objtype, observationinfos)
+                observationinfos.append(so_exposure(f, exptime, amounts))
+            a = stellar(name, ra, dec, observationinfos)
             # a.outputobjectinfo()
             lotisdata.append(a)
     return lotisdata
@@ -178,8 +178,8 @@ def readfromweb():
             objtype = ""
             observationinfos = []
             for f in filters:
-                observationinfos.append(ObservationInfo(f, exptime, amounts))
-            lotisdata.append(QueueObject(name, ra, dec, objtype, observationinfos))
+                observationinfos.append(so_exposure(f, exptime, amounts))
+            lotisdata.append(stellar(name, ra, dec, observationinfos))
 
     target = os.path.join(APP_ROOT, "uploads")
     file_dest = target+'/lotisweb.queue'
@@ -193,7 +193,7 @@ def savequeue(data, fullpath):
     for i, d in enumerate(data):
         param = ('{},{},{},{}'.format(d.name, d.ra, d.dec, d.type)) + "^z^"
         for o in d.observation_info:
-            param += ('{},{},{}'.format(o.filter, o.exptime, o.amount)) + "<z>"
+            param += ('{},{},{}'.format(o.filter, o.exptime, o.num_exposures)) + "<z>"
         of.write(param + '\n')
     of.close()
 
@@ -209,8 +209,8 @@ def readqueue(fullpath):
         observationinfos = []
         for obs in observationinfo:
             sobs = obs.split(',')
-            observationinfos.append(ObservationInfo(sobs[0], sobs[1], sobs[2]))
-        data.append(QueueObject(smain[0], smain[1], smain[2], smain[3], observationinfos))
+            observationinfos.append(so_exposure(sobs[0], sobs[1], sobs[2]))
+        data.append(stellar(smain[0], smain[1], smain[2], observationinfos))
     return data
 
 
@@ -227,7 +227,7 @@ def getdatafromname(fullpath, name):
     for d in data:
         if d.name == name:
             return d
-    return QueueObject("", "", "", "", "")
+    return stellar("", "", "", "")
 
 
 def removequeueobject(fullpath, name):
@@ -362,7 +362,7 @@ def setrts2observscript(queueobj, targetid):
     filterdict = {"U": 0, "B": 1, "V": 2, "R": 3, "I": 4, "SCHOTT": 5}
     for obs in queueobj.observation_info:
         tmp = "filter={} E {} ".format(filterdict[str.upper(obs.filter)], str(obs.exptime))
-        script += (tmp * int(obs.amount))
+        script += (tmp * int(obs.num_exposures))
     cmd = "rts2-target -c C0 --lunarDistance 15: --airmass :2.2 -s \"{}\" {}".format(script, str(targetid))
     print(cmd)
     subprocess.call(cmd, shell=True)
@@ -419,10 +419,10 @@ def updatequeuedata():
     exptimes = request.form.getlist('exptime')
     amounts = request.form.getlist('amount')
 
-    queueobj = QueueObject(updatename, ra, dec, "Object", [])
+    queueobj = stellar(updatename, ra, dec, [])
     for f in range(0, len(filters)):
         if filters[f] != "" or exptimes[f] != "" or amounts[f] != "":
-            obsinfo = ObservationInfo(filters[f], exptimes[f], amounts[f])
+            obsinfo = so_exposure(filters[f], exptimes[f], amounts[f])
             queueobj.observation_info.append(obsinfo)
 
     removequeueobject(fullpath, editname)
