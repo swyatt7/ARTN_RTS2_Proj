@@ -52,6 +52,7 @@ basic_auth = BasicAuth( app )
 try:
     prx = rts2.createProxy( url='http://localhost:8889', username=CONFIG["username"], password=CONFIG["password"])
     importRTS2 = True
+    
     print("RTS2 succesfully imported")
 except:
     print("RTS2 not imported whoopsy")
@@ -277,7 +278,7 @@ def rts2_status():
 
 @app.route('/index')
 def index():
-    return render_template('index.html', files=getuploads(), importRTS2=importRTS2)
+    return render_template('index.html', files=getuploads(), importRTS2=importRTS2 )
 
 
 @app.route('/home')
