@@ -1,4 +1,4 @@
 build/*
 **/*.swp
 **/*.pyc
-
+rts2www/uploads/*
