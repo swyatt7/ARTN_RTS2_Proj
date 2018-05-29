@@ -1,4 +1,3 @@
-
 <script>
 
 (function main()
@@ -13,13 +12,23 @@ $.ajax
   data: '{ "comment" }',
 })
 	.done(function(data)
-	{
+	{	
+		try
+		{		
+			$("button#dropdownMenuStatus").html(data['rts2_status']);
+		}
+		catch(err)
+		{
+			$("h4#rts2_status").text(err);
+
+		}
+
+
 		$( "span.rts2_val" ).each(function(index)
 		{
 			var dev = $( this ).attr( "device" ); 
 			var valname = $( this ).attr( "valname" );
 			var type = $( this ).attr( "rts2type" );
-			
 			var good_data = false;
 			if(dev in data)
 			{
@@ -43,7 +52,7 @@ $.ajax
 				}
 				else if( type == "time" )
 				{
-					var d = new Date(data[dev]["d"][valname][1])
+					var d = new Date(data[dev]["d"][valname][1]*1000)
 					var h = ("0"+d.getHours()).slice(-2);
 					var m = ("0"+d.getMinutes()).slice(-2);
 					var s = ("0"+d.getSeconds()).slice(-2);
@@ -57,7 +66,7 @@ $.ajax
 			}
 			else
 			{
-				console.log("There was a problem in getting rts2 data");
+				console.log("There was a problem getting rts2 data");
 				console.log(data);
 				$("div#errmsg").text("Could not get device "+dev+", is RTS2 on?")
 			}
@@ -84,45 +93,72 @@ function startup()
 	})
 }
 
+function change_rts2_state(state)
+{
+	$.ajax
+	({
+		type: "GET",
+		url: "rts2state/"+state,
+	})
+}
+
+
 $("span.rts2_label").css("min-width","100px");
 </script>
 
 
-<span style="border:solid 1px white;padding:5px;display:inline-block">
-	<h3>Important RTS2 Values</h3>
-	<div class="val_row"> 
+<span style="border:solid 1px black;padding:5px;display:inline-block">
+	<h1>RTS2 Status</h1>
+	<hr/>
+	<h4 id="rts2_status"></h4>
+	<div class="dropdown">
+		<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size:18pt">
+			Dropdown button
+		</button>
+		<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			<a class="dropdown-item" href="#" onclick="change_rts2_state('on')">On</a><br>
+			<a class="dropdown-item" href="#" onclick="change_rts2_state('standby')">Standby</a><br>
+			<a class="dropdown-item" href="#" onclick="change_rts2_state('off')">Off</a><br>
+		</div>
+	</div>
+
+	<div class="val_row" style="font-size:18pt"> 
 		<span class="rts2_label"> queue_only</span> 
-		<span class="rts2_val" device="SEL" valname="queue_only" rts2type="bool"/>
+		<span class="rts2_val" device="SEL" valname="queue_only" rts2type="bool" style="float:right"/>
 	</div>
-	<div class=val_row> 
-		<span class="rts2_label"> focus </span>
-		<span class="rts2_val" device="F0" valname="FOC_POS"/>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Focus Pos</span>
+		<span class="rts2_val" device="F0" valname="FOC_POS" style="float:right"/>
 	</div>
-	<div class=val_row> 
+	<div class="val_row" style="font-size:18pt"> 
 		<span class="rts2_label"> plan_queing </span>
-		<span class="rts2_val" device="SEL" valname="plan_queing"/>
+		<span class="rts2_val" device="SEL" valname="plan_queing" style="float:right"/>
 	</div>	
-	<div class=val_row> 
+	<div class="val_row" style="font-size:18pt"> 
 		<span class="rts2_label"> auto_loop </span>
-		<span class="rts2_val" device="EXEC" valname="auto_loop", rts2type="bool"/>
+		<span class="rts2_val" device="EXEC" valname="auto_loop", rts2type="bool" style="float:right"/>
 	</div>
-	<div class=val_row> 
+	<div class="val_row" style="font-size:18pt"> 
 		<span class="rts2_label"> pec_state </span>
-		<span class="rts2_val" device="BIG61" valname="pec_state"/>
+		<span class="rts2_val" device="BIG61" valname="pec_state" style="float:right"/>
 	</div>
-	<div class=val_row> 
-		<span class="rts2_label"> flat_beginning  </span>
-		<span class="rts2_val" device="SEL" valname="flat_beginning" rts2type="time" />
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Flats at  </span>
+		<span class="rts2_val" device="SEL" valname="flat_beginning" rts2type="time"  style="float:right"/>
+	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Auto Dome</span>
+		<span class="rts2_val" device="BIG61" valname="dome_auto" rts2type="bool"  style="float:right"/>
 	</div>
 
 	<div id="errmsg"></div>
 		
-	<button onclick="startup()" title="Click here to set queue_only etc" >Good Start</button>
+	<!--<button onclick="startup()" title="Click here to set queue_only etc" >Good Start</button>-->
 
 
 </span>
 
-
+<!--
 <p style="padding:20px; font-weight:bold; font-size:20px" > <a href="lastimg">Download Last Image </a> </p>
-
+-->
 

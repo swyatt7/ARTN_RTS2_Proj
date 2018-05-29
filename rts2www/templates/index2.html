@@ -4,12 +4,21 @@
 <head>
     <title>RTS2QM</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+	{% include "bootstrap_top.html" %}
+	<script>
+		function main()
+		{
+			$(".allsky_img").attr('src', "https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG?num="+Math.random());
+			setTimeout(5000, main );
+		}
+	</script>
 </head>
 
-{% include "bootstrap_top.html" %}
 
 
-<body>
+
+<body onload="main()">
     <header>
       <div class="container">
         <h1 class="logo">RTS2 Home</h1>
@@ -48,7 +57,9 @@
 	  	{% endfor %}
 	    </div>
         {% endif %}
+	<img id="allsky_img" src="https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG"/ style="float:right">
     </div>
+
 </body>
 
 </html>

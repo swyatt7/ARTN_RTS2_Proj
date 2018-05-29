@@ -16,10 +16,10 @@ import re
 from astropy.coordinates import Angle
 from astropy import units as u
 import sys
-
+from rts2solib import asteroid, stellar, rts2comm
 
 global importRTS2
-importRTS2 = False
+importRTS2 = True
 global prx
 prx = None
 
@@ -481,10 +481,23 @@ def _set_rts2_value(device, name, value):
 # Begin flask functions
 
 
+@app.route("/rts2state/<state>")
+@basic_auth.required
+def change_state(state):
+    commer = rts2comm()
+    if state.lower() in ['on', 'off', 'standby']:
+        commer.set_state(state)
+        resp = "state set to {}".format(state)
+    else:
+        resp = "bad state {}".format(state)
+    return resp
+
+
 @app.route('/device/<name>')
 @basic_auth.required
-def get_device(name):
-    return _get_device(name)
+def get_device(name=None):
+    commer = rts2comm()
+    return json.dumps( commer.get_device_info() )
 
 
 @app.route('/device')
@@ -492,17 +505,14 @@ def get_device(name):
 def get_all_devices():
     """Get the rts2 values for all the devices in RTS2 and put them in
     one big json."""
-    outdata = {}
-    for dev in ("BIG61", "C0", "SEL", "EXEC", "F0", "W0"):
-        jdata = _get_device(dev)
-        try:
-            jdata = json.loads(jdata)
-        except Exception as err:
-            jdata = {"error": str(err)}
+    commer = rts2comm()
+    try:
+        jdata = commer.get_device_info_all()
+    except Exception as err:
+        jdata = {"error": str(err)}
 
-        outdata[dev] = jdata
-
-    return json.dumps(outdata)
+    jdata['rts2_status'] = commer.get_state()
+    return json.dumps( jdata )
 
 
 @app.route('/device/set/<device>/<name>/<value>')
@@ -516,10 +526,11 @@ def set_rts2_value(device, name, value):
 def rts2_queue_start():
     """Easy way set all the parameters for starting
     queue observing. """
-    _set_rts2_value("SEL", "plan_queing", 3)
-    _set_rts2_value("SEL", "queue_only", True)
-    _set_rts2_value("BIG61", "pec_state", 1)
-    _set_rts2_value("EXEC", "auto_loop", False)
+    commer = rts2comm()
+    commer.set_rts2_value("SEL", "plan_queing", 3)
+    commer.set_rts2_value("SEL", "queue_only", True)
+    commer.set_rts2_value("BIG61", "pec_state", 1)
+    commer.set_rts2_value("EXEC", "auto_loop", False)
 
 
 @app.route('/lastimg')
@@ -533,10 +544,25 @@ def download_lastimg():
 @app.route('/weather/boltwood.json')
 @basic_auth.required
 def boltwood_json():
-    """Use C0.last_img_path to downlaod the most recent image."""
     try:
         r = requests.get("https://www.lpl.arizona.edu/~css/bigelow/boltwoodlast.json")
-        jdata = r.text
+        jdata = json.loads( r.text )
+        if jdata['iCloud'] == 1:
+            jdata['cloud_state'] ='Clear'
+        elif jdata['iCloud'] == 2:
+            jdata['cloud_state'] ='Partly Cloudy'
+        elif jdata['iCloud'] == 3:
+            jdata['cloud_state'] ='Cloudy'
+        
+        if jdata['iDaylight'] == 3:
+            jdata['day_state'] = "Day"
+        elif jdata['iDaylight'] == 2:
+            jdata['day_state'] = "Dusk"
+        elif jdata['iDaylight'] == 1:
+            jdata['day_state'] = "Night"
+
+        jdata = json.dumps(jdata)
+
     except Exception as err:
         jdata = json.dumps({"error": str(err)})
     return jdata

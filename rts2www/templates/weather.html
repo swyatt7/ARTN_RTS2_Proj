@@ -29,8 +29,36 @@ $.ajax
 </script>
 
 <span style="border:solid 1px white;display:inline-block;padding:10px;">
-	<h3>Boltwood Data</h3>
-	<span style="min-width:150px;display:inline-block">Humdity</span><span boltwood_name="iHumidity" class="boltwood-data"></span>
+	<h1>Boltwood Data</h1>
+	<hr/>
+	<div>
+		<span style="min-width:150px;display:inline-block;font-size:18pt">Humdity</span>
+		<span style="float:right">
+			<span boltwood_name="iHumidity" class="boltwood-data" style="font-size:18pt;"></span>
+			<span style=";font-size:18pt">%</span>
+		</span>
+	</div>
+	<div>
+		<span style="min-width:150px;display:inline-block;font-size:18pt">Raining</span>
+		<span boltwood_name="iRain" class="boltwood-data" style="font-size:18pt;float:right"></span>
+	</div>
+
+	<div>
+		<span style="min-width:150px;display:inline-block;font-size:18pt">Temperature</span>
+		<span style="float:right">
+		<span boltwood_name="fAmbientTemp" class="boltwood-data" style="font-size:18pt"></span>
+		<span style="font-size:18pt">&nbsp;&#778;F</span>
+		</span>
+	</div>
+	<div>
+		<span style="min-width:150px;display:inline-block;font-size:18pt">Clouds</span>
+		<span boltwood_name="cloud_state" class="boltwood-data" style="font-size:18pt;float:right"></span>
+	</div>
+
+	<div>
+		<span style="min-width:150px;display:inline-block;font-size:18pt">Sunlight</span>
+		<span boltwood_name="day_state" class="boltwood-data" style="font-size:18pt;float:right"></span>
+	</div>
 </span>
 
 
