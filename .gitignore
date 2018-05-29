@@ -1,4 +1,5 @@
 build/*
 **/*.swp
+**/*.swo
 **/*.pyc
-rts2www/uploads/*
+rts2www/uploads/**
