@@ -80,7 +80,7 @@ $.ajax
 		console.log(textStatus);
 		console.log(errorThrown);
 	})
-.always( function() {setTimeout(main, 500000 )} )
+.always( function() {setTimeout(main, 5000 )} )
 })();
 
 function startup()
@@ -107,7 +107,7 @@ $("span.rts2_label").css("min-width","100px");
 </script>
 
 
-<span style="border:solid 1px black;padding:5px;display:inline-block">
+<span style="border:solid 1px black;padding:5px;display:block">
 	<h1>RTS2 Status</h1>
 	<hr/>
 	<h4 id="rts2_status"></h4>
@@ -150,10 +150,15 @@ $("span.rts2_label").css("min-width","100px");
 		<span class="rts2_label"> Auto Dome</span>
 		<span class="rts2_val" device="BIG61" valname="dome_auto" rts2type="bool"  style="float:right"/>
 	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Target</span>
+		<span class="rts2_val" device="EXEC" valname="current_name" rts2type="none"  style="float:right;font-color:red;color:red"/>
+	</div>
+
 
 	<div id="errmsg"></div>
 		
-	<!--<button onclick="startup()" title="Click here to set queue_only etc" >Good Start</button>-->
+	<button onclick="startup()" title="Click here to set queue_only etc" >After Flats Settings</button>
 
 
 </span>

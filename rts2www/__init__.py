@@ -341,7 +341,7 @@ def showfile():
             targetids = []
             for d in data:
                 targetid = getrts2targetid(d)
-                setrts2observscript(d, targetid)
+                #setrts2observscript(d, targetid)
                 targetids.append(targetid)
             setrts2queue(targetids)
         return render_template('index.html', files=getuploads(), rts2queue=importRTS2, importRTS2=importRTS2)
@@ -508,7 +508,7 @@ def get_all_devices():
     one big json."""
     commer = rts2comm()
     try:
-        jdata = commer.get_device_info_all()
+        jdata = commer._getall()
     except Exception as err:
         jdata = {"error": str(err)}
 

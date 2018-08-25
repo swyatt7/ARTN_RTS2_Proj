@@ -9,14 +9,11 @@
 	<script>
 		function main()
 		{
-			$(".allsky_img").attr('src', "https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG?num="+Math.random());
-			setTimeout(5000, main );
+			$("#allsky_img").attr('src', "https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG?num="+Math.random());
+			setTimeout(main, 60000 );
 		}
 	</script>
 </head>
-
-
-
 
 <body onload="main()">
     <header>
@@ -31,34 +28,41 @@
         </nav></strong>
       </div>
     </header>
-    <div style="width: 50%; float: left;">
-        <div id="rts2_status" >
-             {% include "rts2_status.html"  %}
-        </div>
+	<div style="padding:10px" class="main_content" id="content">
+		<div style="width: 300px; float: left; margin:0px 100px 0px 0px">
+			<div id="rts2_status" style="">
+				 {% include "rts2_status.html"  %}
+			</div>
 
-        <div id="weather" class="tab-pane fade in active" >
-             {% include "weather.html"  %}
-        </div>
-    </div>
-    <div style="width: 50%; float: right;">
-    	{% if queues %}
-	   <div>
-	   	{% for q in queues %}
-		   <p style="font-family: monospace; font-size: 16pt">Queue: {{ q.name }}</p>
-		   {% if q.queueitems == [] %}
-		   	<p style="font-family: monospace; fontsize: 12pt">None</p>
-		   {% endif %}
-		   {% if q.queueitems != [] %}
-		    	{% for qi in q.queueitems%}
-		            <p style="font-family: monospace; fontsize: 12pt">{{ qi.name }}</p>
-		    	{% endfor %}
-                   {% endif %}
-		   <p></p>
-	  	{% endfor %}
-	    </div>
-        {% endif %}
-	<img id="allsky_img" src="https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG"/ style="float:right">
-    </div>
+			<div id="weather" class="tab-pane fade in active" >
+				 {% include "weather.html"  %}
+			</div>
+		</div>
+		<div style="float: left;">
+			{% if queues %}
+		   <div>
+			{% for q in queues %}
+			   <p style="font-family: monospace; font-size: 16pt">Queue: {{ q.name }}</p>
+			   {% if q.queueitems == [] %}
+				<p style="font-family: monospace; fontsize: 12pt">None</p>
+			   {% endif %}
+			   {% if q.queueitems != [] %}
+					{% for qi in q.queueitems%}
+						<p style="font-family: monospace; fontsize: 12pt">{{ qi.name }}</p>
+					{% endfor %}
+					   {% endif %}
+			   <p></p>
+			{% endfor %}
+			</div>
+			{% endif %}
+		</div>
+		<div style="float:right">
+		<img id="allsky_img" src="https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG" height="500px", width="600px" />
+		<hr>
+		<img id="allsky_img" src="http://mogit.as.arizona.edu/static/lightning.gif" height="500px", width="600px"/>
+		</div>	
+
+	</div>
 
 </body>
 

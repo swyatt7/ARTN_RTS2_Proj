@@ -4,6 +4,13 @@ body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #444;
 }
+
+div.main.container#content
+{
+	margin:0px;
+	padding-left:20px;
+	padding-right:40px;
+}
 /*
  * Formatting the header area
  */
