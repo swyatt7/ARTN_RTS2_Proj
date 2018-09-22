@@ -13,6 +13,8 @@
 			setTimeout(main, 60000 );
 		}
 	</script>
+	<script src=/static/rts2_vals.js></script>
+	
 </head>
 
 <body onload="main()">
@@ -31,12 +33,72 @@
 	<div style="padding:10px" class="main_content" id="content">
 		<div style="width: 300px; float: left; margin:0px 100px 0px 0px">
 			<div id="rts2_status" style="">
-				 {% include "rts2_status.html"  %}
-			</div>
+	<span style="border:solid 1px black;padding:5px;display:block">
+	<h1>RTS2 Status</h1>
+	<hr/>
+	<h4 id="rts2_status"></h4>
+	<div class="dropdown">
+		<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size:18pt">
+			Dropdown button
+		</button>
+		<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			<a class="dropdown-item" href="#" onclick="change_rts2_state('on')">On</a><br>
+			<a class="dropdown-item" href="#" onclick="change_rts2_state('standby')">Standby</a><br>
+			<a class="dropdown-item" href="#" onclick="change_rts2_state('off')">Off</a><br>
+		</div>
+	</div>
 
-			<div id="weather" class="tab-pane fade in active" >
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> queue_only</span> 
+		<span class="rts2_val" device="SEL" valname="queue_only" rts2type="bool" style="float:right"/>
+	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Focus Pos</span>
+		<span class="rts2_val" device="F0" valname="FOC_POS" style="float:right"/>
+	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> plan_queing </span>
+		<span class="rts2_val" device="SEL" valname="plan_queing" style="float:right"/>
+	</div>	
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> auto_loop </span>
+		<span class="rts2_val" device="EXEC" valname="auto_loop", rts2type="bool" style="float:right"/>
+	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> pec_state </span>
+		<span class="rts2_val" device="BIG61" valname="pec_state" style="float:right"/>
+	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Flats at  </span>
+		<span class="rts2_val" device="SEL" valname="flat_beginning" rts2type="time"  style="float:right"/>
+	</div>
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Auto Dome</span>
+		<span class="rts2_val" device="BIG61" valname="dome_auto" rts2type="bool"  style="float:right"/>
+	</div>	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Airmass</span>
+		<span class="rts2_val" device="BIG61" valname="AIRMASS" rts2type="float"  style="float:right;font-color:red;"/>
+	</div>
+
+	<div class="val_row" style="font-size:18pt"> 
+		<span class="rts2_label"> Target</span>
+		<span class="rts2_val" device="EXEC" valname="current_name" rts2type="none"  style="float:right;font-color:red;color:red"/>
+	</div>
+
+
+	<div id="errmsg"></div>
+		
+	<button onclick="startup()" title="Click here to set queue_only etc" >After Flats Settings</button>
+
+		</span>
+
+			</div>
+					<div id="weather" class="tab-pane fade in active" >
 				 {% include "weather.html"  %}
 			</div>
+
+		
+
 		</div>
 		<div style="float: left;">
 			{% if queues %}
@@ -56,10 +118,32 @@
 			</div>
 			{% endif %}
 		</div>
+		<div style="float:left;border:solid 1px black;">
+			<h2>Filters</h2>
+						<div>
+				<span class="rts2_label">Current Filter</span>
+				<span class="rts2_val" device="W0" valname="loadedFilter" rts2type="none" style="font-weight:bold"></span>
+			</div>
+			<div>
+				<span class="rts2_label">Filter Number</span>
+				<span class="rts2_val" device="W0" valname="filter" rts2type="none" style="font-weight:bold"></span>
+			</div>
+			<div>
+				<span class="rts2_label">Available Filters:</span>
+				<span class="rts2_val" device="W0" valname="filter_names" rts2type="none" ></span>
+			</div>
+
+		</div>
+
+		<div "style=float:left;border:solid 1px black;">
+		<span class="rts2_val"></span>
+		</div>
 		<div style="float:right">
-		<img id="allsky_img" src="https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG" height="500px", width="600px" />
+		<img id="allsky_img" src="https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG" height="250", width="300px" />
 		<hr>
-		<img id="allsky_img" src="http://mogit.as.arizona.edu/static/lightning.gif" height="500px", width="600px"/>
+		<img id="allsky_img" src="http://mogit.as.arizona.edu/static/lightning.gif" height="250px", width="300px"/>
+		<hr>
+		<img id="allsky_img" src="http://10.30.3.45/mjpg/1/video.mjpg?camera=1&timestamp=1535421354284" height="250px", width="300px"/>
 		</div>	
 
 	</div>
