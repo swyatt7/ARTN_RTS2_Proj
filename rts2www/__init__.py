@@ -76,6 +76,7 @@ class Rts2Queue:
 	def __init__( self, _name ):
 	    self.name = _name
 	    self.queueitems = self.populate()
+
 	def populate(self):
 	    queue = rts2.Queue(prx, self.name)
             queue.load()
@@ -157,6 +158,7 @@ def readlotis(fullpath):
                 observationinfos.append(so_exposure(f, exptime, amounts))
             a = stellar(name, ra, dec, observationinfos)
             # a.outputobjectinfo()
+            a.save()
             lotisdata.append(a)
     return lotisdata
 
@@ -199,7 +201,8 @@ def savequeue(data, fullpath):
     of.close()
 
 
-def readqueue(fullpath):
+def readqueue(fullpath, save_script=True):
+    #added save arg to save script to file. 
     data = []
     fi = open(fullpath, "r")
     for line in fi:
@@ -211,7 +214,10 @@ def readqueue(fullpath):
         for obs in observationinfo:
             sobs = obs.split(',')
             observationinfos.append(so_exposure(sobs[0], sobs[1], sobs[2]))
-        data.append(stellar(smain[0], smain[1], smain[2], observationinfos))
+        targ = (stellar(smain[0], smain[1], smain[2], observationinfos))
+        if save_script:
+          targ.save()
+        data.append(targ)
     return data
 
 
@@ -329,7 +335,7 @@ def showfile():
     target = os.path.join(APP_ROOT, "uploads")
     fullpath = target + "/" + filename
     if "display" in request.form.keys():
-        output = readqueue(fullpath)
+        output = readqueue(fullpath, save_script=False)
         return render_template('index.html', files=getuploads(), output=output, importRTS2=importRTS2)
     if 'edit' in request.form.keys():
         names = getobjectnames(fullpath)
@@ -344,6 +350,7 @@ def showfile():
                 #setrts2observscript(d, targetid)
                 targetids.append(targetid)
             setrts2queue(targetids)
+            print(fullpath)
         return render_template('index.html', files=getuploads(), rts2queue=importRTS2, importRTS2=importRTS2)
 
 
@@ -365,6 +372,7 @@ def setrts2observscript(queueobj, targetid):
         tmp = "filter={} E {} ".format(filterdict[str.upper(obs.filter)], str(obs.exptime))
         script += (tmp * int(obs.num_exposures))
     cmd = "rts2-target -c C0 --lunarDistance 15: --airmass :2.2 -s \"{}\" {}".format(script, str(targetid))
+    
     print(cmd)
     subprocess.call(cmd, shell=True)
 
@@ -386,7 +394,11 @@ def getrts2targetid(queueobj):
 
 @app.route('/editqueuedata', methods=['POST'])
 def editqueuedata():
-    editname = request.form['editname']
+    if 'editname' in request.form:
+        editname = request.form['editname']
+    else:
+        editname = None
+        
     queuefile = request.args['queuefile'] + ".queue"
     target = os.path.join(APP_ROOT, "uploads")
     fullpath = target + "/" + queuefile
@@ -425,7 +437,7 @@ def updatequeuedata():
         if filters[f] != "" or exptimes[f] != "" or amounts[f] != "":
             obsinfo = so_exposure(filters[f], exptimes[f], amounts[f])
             queueobj.observation_info.append(obsinfo)
-
+	queueobj.save()
     removequeueobject(fullpath, editname)
     queuedata = readqueue(fullpath)
     queuedata.append(queueobj)
