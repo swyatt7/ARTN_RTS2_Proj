@@ -1,5 +1,5 @@
 from __future__ import print_function
-from flask import Flask, send_file
+from flask import Flask, send_file, jsonify
 from flask import render_template
 from flask import request
 from flask_basicauth import BasicAuth
@@ -17,6 +17,7 @@ from astropy.coordinates import Angle
 from astropy import units as u
 import sys
 from rts2solib import asteroid, stellar, rts2comm, so_exposure
+import subprocess
 
 global importRTS2
 importRTS2 = True
@@ -504,6 +505,42 @@ def change_state(state):
     else:
         resp = "bad state {}".format(state)
     return resp
+
+@app.route("/drivers/<driver>/<action>")
+@basic_auth.required
+def driver_actions(driver, action):
+    cmd_errors=None
+    proc_errors=None
+    retncode = None
+    success = True
+    if driver.upper() in ['C0', 'BIG61', 'EXEC', 'SEL']:
+        if action.lower() == "start":
+            retncode = subprocess.call(["rts2-start", driver.upper()])
+        
+        elif action.lower() == "stop":
+            retncode = subprocess.call(["rts2-stop", driver.upper()])
+            
+        elif action.lower() == "restart":
+            retncode = subprocess.call(["rts2-start", driver.upper()])
+            if retncode == 0:
+                retncode = subprocess.call(["rts2-stop", driver.upper()])
+        else:
+            cmd_errors = "Bad action {}".format(action)
+            success=False
+
+
+    else:
+        cmd_errors = "Bad driver name {}".format(driver)
+        success = False
+    if retncode is not None:
+        if retncode != 0:
+            retncode_errors = "Bad return code {}".format(retncode)
+            success = False
+            
+            
+                
+    return jsonify({"cmd_errors":cmd_errors, "proc_errors":proc_errors, "success":success})
+
 
 
 @app.route('/device/<name>')

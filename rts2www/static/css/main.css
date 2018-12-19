@@ -91,3 +91,17 @@ h3 {
   width: 48%;
   float: left;
 }
+
+div#status_weather
+{
+  width:350px;  
+  padding:5px;
+  display:block;
+  float: left; 
+  margin:0px 100px 0px 0px;
+
+}
+span#inner_rts2_status
+{
+  border:solid 1px black;
+}
