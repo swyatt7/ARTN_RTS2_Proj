@@ -16,7 +16,7 @@ import re
 from astropy.coordinates import Angle
 from astropy import units as u
 import sys
-from rts2solib import asteroid, stellar, rts2comm, so_exposure
+from rts2solib import asteroid, stellar, rts2comm, so_exposure, load_from_script
 import subprocess
 
 global importRTS2
@@ -191,20 +191,40 @@ def readfromweb():
     return [lotisdata, 'lotisweb.queue']
 
 
+
 def savequeue(data, fullpath):
-    of = open(fullpath, "w+")
+    # the of stuff has been replaced by
+    # json we will keep it around in case 
+    # there is trouble
+    #of = open(fullpath, "w+")
     data.sort(key=lambda x: x.name, reverse=False)
+    jsonpath = fullpath.replace(".queue", ".json")
+    json_data = []
     for i, d in enumerate(data):
-        param = ('{},{},{},{}'.format(d.name, d.ra, d.dec, d.type)) + "^z^"
-        for o in d.observation_info:
-            param += ('{},{},{}'.format(o.filter, o.exptime, o.num_exposures)) + "<z>"
-        of.write(param + '\n')
-    of.close()
+        
+        json_data.append(d.dictify())
+#        param = ('{},{},{},{}'.format(d.name, d.ra, d.dec, d.type)) + "^z^"
+#        for o in d.observation_info:
+#            param += ('{},{},{}'.format(o.filter, o.exptime, o.num_exposures)) + "<z>"
+#        of.write(param + '\n')
+#    of.close()
+    with open(jsonpath, "w") as jfd:
+        json.dump( json_data, jfd, indent=2 )
 
 
-def readqueue(fullpath, save_script=True):
-    #added save arg to save script to file. 
+def readqueue(fullpath, save_script=False):
     data = []
+    jsonpath = fullpath.replace(".queue", ".json")
+    
+    with open(jsonpath) as fd:
+        json_data = json.load(fd)
+    for targ in json_data:
+        data.append(stellar( **targ ))
+    return data
+
+    # data is now read in as json
+    # we shall keep the below code in
+    # case there is trouble
     fi = open(fullpath, "r")
     for line in fi:
         maininfo = line.split("^z^")[0]
@@ -235,7 +255,8 @@ def getdatafromname(fullpath, name):
     for d in data:
         if d.name == name:
             return d
-    return stellar("", "", "", "")
+    raise NameError("Can't find name {}".format(name))
+        
 
 
 def removequeueobject(fullpath, name):
@@ -340,14 +361,15 @@ def showfile():
         return render_template('index.html', files=getuploads(), output=output, importRTS2=importRTS2)
     if 'edit' in request.form.keys():
         names = getobjectnames(fullpath)
-        data = readqueue(fullpath)
+        data = readqueue(fullpath, False)
         return render_template('edit_queue.html', queue=filename.split('.queue')[0], object_names=names, data=data, importRTS2=importRTS2)
     if 'rts2queue' in request.form.keys():
         if importRTS2:
-            data = readqueue(fullpath)
+            data = readqueue(fullpath, False)
             targetids = []
             for d in data:
-                targetid = getrts2targetid(d)
+                d.save()
+                targetid = d.id
                 #setrts2observscript(d, targetid)
                 targetids.append(targetid)
             setrts2queue(targetids)
@@ -438,7 +460,7 @@ def updatequeuedata():
         if filters[f] != "" or exptimes[f] != "" or amounts[f] != "":
             obsinfo = so_exposure(filters[f], exptimes[f], amounts[f])
             queueobj.observation_info.append(obsinfo)
-	queueobj.save()
+	#queueobj.save()
     removequeueobject(fullpath, editname)
     queuedata = readqueue(fullpath)
     queuedata.append(queueobj)
@@ -542,6 +564,22 @@ def driver_actions(driver, action):
     return jsonify({"cmd_errors":cmd_errors, "proc_errors":proc_errors, "success":success})
 
 
+@app.route("/rts2scripts")
+@basic_auth.required
+def rts2scripts():
+    commer=rts2comm()
+    target_name = commer.get_rts2_value("EXEC", "current_name").value
+    current_exp_num = commer.get_rts2_value("C0", "script_exp_num").value
+    if target_name == "":
+        exps=0
+    else:
+        script = load_from_script(target_name)
+    
+        exps=0
+        for expset in script["obs_info"]:
+            exps+=int(expset["amount"])
+    return jsonify({"total_num_exps": exps, "script_exp_num":current_exp_num  })
+    
 
 @app.route('/device/<name>')
 @basic_auth.required

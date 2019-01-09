@@ -6,13 +6,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
 	{% include "bootstrap_top.html" %}
-	<script>
-		function main()
-		{
-			$("#allsky_img").attr('src', "https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG?num="+Math.random());
-			setTimeout(main, 60000 );
-		}
-	</script>
 	<script src=/static/rts2_vals.js></script>
 	
 </head>
@@ -89,6 +82,9 @@
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> Target</span>
 			<span class="rts2_val" device="EXEC" valname="current_name" rts2type="none"  style="float:right;font-color:red;color:red"/>
+		</div>
+		<div class="val_row" style="font-size:18pt"> 
+			<span class="rts2_label" id="exp_num" style="color:red">
 		</div>
 
 
