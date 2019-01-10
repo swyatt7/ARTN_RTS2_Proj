@@ -105,3 +105,22 @@ span#inner_rts2_status
 {
   border:solid 1px black;
 }
+
+p.rts2_message
+{
+	font-size:10pt;
+}
+
+p.rts2info
+{
+	color:green;
+}
+
+p.rts2warn
+{
+	color:#F1C40F;
+}
+p.rts2error
+{
+	color:green;
+}

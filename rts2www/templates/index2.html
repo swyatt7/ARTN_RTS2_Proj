@@ -7,6 +7,21 @@
 
 	{% include "bootstrap_top.html" %}
 	<script src=/static/rts2_vals.js></script>
+	<script>
+		function restartd(driver_name)
+		{
+			console.log(driver_name.id);
+			console.log("drivers/"+driver_name.id+"/restart");
+			$.getJSON("drivers/"+driver_name.id+"/restart", function(data)
+			{
+				console.log(data);
+			})
+			.fail(function (err){console.log(err)})
+			.done(function(data){console.log("FINISHED")})
+		}
+		
+	</script>
+	
 	
 </head>
 
@@ -18,6 +33,7 @@
           <ul class="menu">
             <li><a href="{{ url_for('home') }}">Home</a></li>
             <li><a href="{{ url_for('index') }}">Queue Manager</a></li>
+            <li><a href="{{ url_for('dbmessages') }}">Messages</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
           </ul>
         </nav></strong>
@@ -141,15 +157,15 @@
 		<span class="rts2_val"></span>
 		</div>
 		<div style="float:right">
-			<p class="rts2_device_check" id="centrald">CENTRALD</p>
-			<p class="rts2_device_check" id="BIG61">BIG61</p>
-			<p class="rts2_device_check" id="C0">C0</p>
-			<p class="rts2_device_check" id="EXEC">EXEC</p>
-			<p class="rts2_device_check" id="F0">F0</p>
+			<p class="rts2_device_check" id="centrald"> CENTRALD</p>
+			<p class="rts2_device_check" id="BIG61"><a href="#"  ondblclick="restartd(BIG61)" class="glyphicon glyphicon-repeat"></a> BIG61</p>
+			<p class="rts2_device_check" id="C0"><a href="#" ondblclick="restartd(C0)" class="glyphicon glyphicon-repeat"></a> C0</p>
+			<p class="rts2_device_check" id="EXEC"><a href="#" ondblclick="restartd(EXEC)" class="glyphicon glyphicon-repeat"></a> EXEC</p>
+			<p class="rts2_device_check" id="F0"><a href="#" ondblclick="restartd(F0)" class="glyphicon glyphicon-repeat"></a> F0</p>
 			<p class="rts2_device_check" id="HTTPD">HTTPD</p>
-			<p class="rts2_device_check" id="IMGP">IMGP</p>
-			<p class="rts2_device_check" id="SEL">SEL</p>
-			<p class="rts2_device_check" id="W0">W0</p>
+			<p class="rts2_device_check" id="IMGP"> IMGP</p>
+			<p class="rts2_device_check" id="SEL"><a href="#" ondblclick="restartd(SEL)" class="glyphicon glyphicon-repeat"></a> SEL</p>
+			<p class="rts2_device_check" id="W0"><a href="#" ondblclick="restartd(W0)" class="glyphicon glyphicon-repeat"></a> W0</p>
 		<!--
 		<img id="allsky_img" src="https://www.lpl.arizona.edu/~css/bigelow/AllSkyCurrentImage.JPG" height="250", width="300px" />
 		<hr>
@@ -158,7 +174,9 @@
 		<img id="allsky_img" src="http://10.30.3.45/mjpg/1/video.mjpg?camera=1&timestamp=1535421354284" height="250px", width="300px"/>
 		-->
 		</div>	
-
+			
+			<!--<textarea id="rts2_messages" readonly rows=10 cols=60 style="position:absolute;bottom:10px;right:10px"></textarea>-->
+			<div id="rts2_messages" style="overflow:scroll;border:solid 1px black;height:400px;width:600px;position:absolute;bottom:10px;right:10px"></div>
 	</div>
 
 </body>

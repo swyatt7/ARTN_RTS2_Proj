@@ -17,7 +17,9 @@ from astropy.coordinates import Angle
 from astropy import units as u
 import sys
 from rts2solib import asteroid, stellar, rts2comm, so_exposure, load_from_script
+from rts2solib.db import message as rts2db_messages
 import subprocess
+
 
 global importRTS2
 importRTS2 = True
@@ -193,7 +195,7 @@ def readfromweb():
 
 
 def savequeue(data, fullpath):
-    # the of stuff has been replaced by
+    # most of this  stuff has been replaced by
     # json we will keep it around in case 
     # there is trouble
     #of = open(fullpath, "w+")
@@ -256,7 +258,7 @@ def getdatafromname(fullpath, name):
         if d.name == name:
             return d
     raise NameError("Can't find name {}".format(name))
-        
+
 
 
 def removequeueobject(fullpath, name):
@@ -347,6 +349,23 @@ def load():
 
     return index()
 
+
+@app.route('/db/message_json/<num>', methods=['GET'])
+def dbmessages_json(num=20):
+    msg=rts2db_messages()
+    messages = msg.query().order_by(msg._rowdef.message_time.desc())[:num]
+    print(messages[0].message_time)
+    msg_dict = [{"message": x.message_string, "time": str(x.message_time), "type": x.message_type} for x in messages]
+    return jsonify(msg_dict)
+
+
+@app.route('/dbmessages', methods=['GET'])
+def dbmessages(num=20):
+    msg=rts2db_messages()
+    messages = msg.query().order_by(msg._rowdef.message_time.desc())[:num]
+  
+    return render_template('dbmessages.html', messages = messages)   
+    
 
 @app.route('/showfile', methods=['POST'])
 def showfile():
@@ -528,6 +547,7 @@ def change_state(state):
         resp = "bad state {}".format(state)
     return resp
 
+
 @app.route("/drivers/<driver>/<action>")
 @basic_auth.required
 def driver_actions(driver, action):
@@ -543,9 +563,10 @@ def driver_actions(driver, action):
             retncode = subprocess.call(["rts2-stop", driver.upper()])
             
         elif action.lower() == "restart":
+            print("restart driver")
+            retncode = subprocess.call(["rts2-stop", driver.upper()])
+            #if retncode == 0:
             retncode = subprocess.call(["rts2-start", driver.upper()])
-            if retncode == 0:
-                retncode = subprocess.call(["rts2-stop", driver.upper()])
         else:
             cmd_errors = "Bad action {}".format(action)
             success=False
