@@ -118,9 +118,9 @@ p.rts2info
 
 p.rts2warn
 {
-	color:#F1C40F;
+	color:orange;
 }
 p.rts2error
 {
-	color:green;
+	color:red;
 }

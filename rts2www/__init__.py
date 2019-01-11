@@ -361,6 +361,7 @@ def nightlyreport():
 
 @app.route('/db/message_json/<num>', methods=['GET'])
 def dbmessages_json(num=20):
+    #return jsonify([{"message":"foo", "time":str(datetime.datetime.now()), "type":4}])
     msg=rts2db_messages()
     messages = msg.query().order_by(msg._rowdef.message_time.desc())[:num]
     print(messages[0].message_time)
@@ -591,19 +592,26 @@ def driver_actions(driver, action):
             
             
                 
-    return jsonify({"cmd_errors":cmd_errors, "proc_errors":proc_errors, "success":success})
+    return jsonify({"cmd_errors":cmd_errors, "proc_errors":proc_errors, "success":success, "retncode":retncode})
 
 
 @app.route("/rts2scripts")
 @basic_auth.required
 def rts2scripts():
     commer=rts2comm()
-    target_name = commer.get_rts2_value("EXEC", "current_name").value
-    current_exp_num = commer.get_rts2_value("C0", "script_exp_num").value
+    try:
+        target_name = commer.get_rts2_value("EXEC", "current_name").value
+        current_exp_num = commer.get_rts2_value("C0", "script_exp_num").value
+    except Exception as err:
+        return jsonify({"total_num_exps": "???", "script_exp_num":"???"  })
+
     if target_name == "":
         exps=0
     else:
-        script = load_from_script(target_name)
+	try:
+        	script = load_from_script(target_name)
+	except Exception as err:
+		return jsonify({"total_num_exps": "???", "script_exp_num":"???"  })
     
         exps=0
         for expset in script["obs_info"]:
