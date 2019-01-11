@@ -18,8 +18,9 @@ from astropy import units as u
 import sys
 from rts2solib import asteroid, stellar, rts2comm, so_exposure, load_from_script
 from rts2solib.db import message as rts2db_messages
+from rts2solib.db import rts2_images, rts2_observations, rts2_targets
 import subprocess
-
+import datetime
 
 global importRTS2
 importRTS2 = True
@@ -348,6 +349,14 @@ def load():
             pass
 
     return index()
+
+
+@app.route('/nightlyreport', methods=['GET'])
+def nightlyreport():
+      
+   report = ["OBSERVED AN AMAZING SUPERNOVA IN ALL AMAZING RELEVANT FILTERS AND IT YIELDED AMAZING RESULTS", "SCIENCE FOREVER"]
+
+   return render_template('nightlyreport.html', report = report) 
 
 
 @app.route('/db/message_json/<num>', methods=['GET'])
