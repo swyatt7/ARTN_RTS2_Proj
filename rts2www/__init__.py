@@ -21,6 +21,7 @@ from rts2solib.db import message as rts2db_messages
 from rts2solib.db import rts2_images, rts2_observations, rts2_targets
 import subprocess
 import datetime
+from rts2.queue import Queue
 
 global importRTS2
 importRTS2 = True
@@ -121,6 +122,7 @@ class ObservationInfo:
         self.exptime = _exptime
 
 def populaterts2queues(queues=['plan','manual','simul']):
+
 	Queues = []
 	for q in queues:
 		Queues.append(Rts2Queue(q))
@@ -408,12 +410,21 @@ def showfile():
 
 def setrts2queue(targetids):
     if len(targetids) > 0:
+        print("LOADING THE QUEUES")
+        q = rts2.Queue( prx, 'plan' )
         targetstring = ""
+        
         for iid in targetids:
-            targetstring += " {}".format(str(iid))
-        cmd = "rts2-queue --queue plan --clear{}".format(targetstring)
-        print(cmd)
-        subprocess.call(cmd, shell=True)
+            if type(iid) == list:#hack iid should not be a list!
+                iid = iid[0]
+            q.add_target(iid)
+
+        #q.load()
+        #q.save()
+#            targetstring += " {}".format(str(iid))
+#        cmd = "rts2-queue --queue plan --clear{}".format(targetstring)
+#        print(cmd)
+#        subprocess.call(cmd, shell=True)
 
 
 def setrts2observscript(queueobj, targetid):

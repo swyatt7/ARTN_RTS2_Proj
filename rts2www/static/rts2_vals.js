@@ -128,7 +128,7 @@ function get_messages(num)
 			//temp = temp+data[ii].time+": "+data[ii].message+"\n"
 		}
 		//console.log("messages")
-		divsel.scrollTop(divsel[0].scrollHeight)
+		//divsel.scrollTop(divsel[0].scrollHeight)
 		//$("textarea#rts2_messages").val(temp);
 	})
 	setTimeout( function(){get_messages(10)}, 10000)
