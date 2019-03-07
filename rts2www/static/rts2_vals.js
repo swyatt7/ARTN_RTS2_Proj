@@ -24,6 +24,8 @@ $.ajax
 		}
 		display_focus(data);
 		check_drivers(data);
+		do_filters(data);
+		do_queues(data);
 
 		$( "span.rts2_val" ).each(function(index)
 		{
@@ -94,6 +96,46 @@ $.ajax
 .always( function() {setTimeout(get_rts2, 5000 )} )
 }
 
+
+function do_filters(data)
+{
+	var filters = data["W0"]["d"]["filter_names"][1].split(" ");
+	var current_filter = data["W0"]["d"]["loadedFilter"][1]
+	for(filter in filters)
+	{
+		if(filters[filter] == "")
+			continue
+
+		if( $("div#"+filters[filter]).length == 0 )
+			$("div#filter_div").append("<div class='filter' id="+filters[filter]+">"+filters[filter]+"</div>")
+
+		if(filters[filter] == current_filter)
+			$("div#"+current_filter).css("background-color", "lightgreen")
+		else
+			$("div#"+current_filter).css("background-color", "none")
+
+	}
+}
+
+function do_queues(data)
+{
+
+	var queues =data["SEL"]["d"]["plan_names"][1];
+	
+	for(queue in queues)
+	{
+		if(queues[queue] == "")
+			continue
+
+		if( $("div#"+queues[queue]).length == 0 )
+			$("div#plan_queue").append("<div class=plan_queue id="+queues[queue]+">"+queues[queue]+"</div>")
+
+
+	}
+
+
+
+}
 
 function get_messages(num)
 {

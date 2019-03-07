@@ -19,6 +19,8 @@
 			.fail(function (err){console.log(err)})
 			.done(function(data){console.log("FINISHED")})
 		}
+
+		
 		
 	</script>
 	
@@ -31,11 +33,11 @@
         <h1 class="logo">RTS2 Home</h1>
         <strong><nav>
           <ul class="menu">
-            <li><a href="{{ url_for('home') }}">Home</a></li>
+		  {# <li><a href="{{ url_for('home') }}">Home</a></li> 
             <li><a href="{{ url_for('index') }}">Queue Manager</a></li>
             <li><a href="{{ url_for('dbmessages') }}">Messages</a></li>
 	    <li><a href="{{ url_for('nightlyreport')}}">Nightly Report</a></li>
-            <li><a href="{{ url_for('about') }}">About</a></li>
+	    <li><a href="{{ url_for('about') }}">About</a></li>#}
           </ul>
         </nav></strong>
       </div>
@@ -57,24 +59,24 @@
 			</div>
 		</div>
 
-		<div class="val_row" style="font-size:18pt"> 
+	<!--	<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> queue_only</span> 
 			<span class="rts2_val" device="SEL" valname="queue_only" rts2type="bool" style="float:right"/>
-		</div>
+	</div>-->
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> Focus Pos</span>
 			<span style="float:right">
 				<input type="text" name="FOC_DEF" id="FOC_DEF" maxlength=6 size=6 />
 			</span>
 		</div>
-		<div class="val_row" style="font-size:18pt"> 
+	<!--	<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> plan_queing </span>
 			<span class="rts2_val" device="SEL" valname="plan_queing" style="float:right"/>
-		</div>	
-		<div class="val_row" style="font-size:18pt"> 
+	</div>	-->
+	<!--	<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> auto_loop </span>
 			<span class="rts2_val" device="EXEC" valname="auto_loop", rts2type="bool" style="float:right"/>
-		</div>
+	</div> -->
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> pec_state </span>
 			<span class="rts2_val" device="BIG61" valname="pec_state" style="float:right"/>
@@ -107,7 +109,7 @@
 
 		<!--<div id="errmsg"></div>-->
 			
-		<button onclick="startup()" title="Click here to set queue_only etc" >After Flats Settings</button>
+		<!--	<button onclick="startup()" title="Click here to set queue_only etc" >After Flats Settings</button> -->
 
 			</span>
 
@@ -136,19 +138,15 @@
 			</div>
 			{% endif %}
 		</div>
-		<div style="float:left;border:solid 1px black;">
+		<div style="float:left;padding:20px;" id="filter_div">
 			<h2>Filters</h2>
-						<div>
-				<span class="rts2_label">Current Filter</span>
-				<span class="rts2_val" device="W0" valname="loadedFilter" rts2type="none" style="font-weight:bold"></span>
-			</div>
-			<div>
-				<span class="rts2_label">Filter Number</span>
-				<span class="rts2_val" device="W0" valname="filter" rts2type="none" style="font-weight:bold"></span>
-			</div>
-			<div>
-				<span class="rts2_label">Available Filters:</span>
-				<span class="rts2_val" device="W0" valname="filter_names" rts2type="none" ></span>
+
+		</div>
+		<div style="float:left;padding:20px;" id="queue_div">
+			<h2>Queues</h2>
+			<div id="plan_queue">
+				<h3>Plan</h3>
+
 			</div>
 
 		</div>
