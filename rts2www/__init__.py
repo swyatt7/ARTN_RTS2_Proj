@@ -1,4 +1,3 @@
-from __future__ import print_function
 from flask import Flask, send_file, jsonify
 from flask import render_template
 from flask import request
@@ -320,6 +319,7 @@ def _test():
     return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
             passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=False, queues=[])
 
+@app.route('/')
 @app.route('/home')
 def home():
     queues = []

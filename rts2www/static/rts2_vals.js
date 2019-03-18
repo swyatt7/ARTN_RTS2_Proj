@@ -86,7 +86,6 @@ $.ajax
 
 
 		});
-
 	})
 	.fail(function(jqXHR, textStatus, errorThrown){
 		console.log(jqXHR);
@@ -117,21 +116,24 @@ function do_filters(data)
 	}
 }
 
+
 function do_queues(data)
 {
 
-	var queues =data["SEL"]["d"]["plan_names"][1];
-	
+	var queues = data["SEL"]["d"]["plan_names"][1];
+	$("span#inner_plan_queue").empty();
+
 	for(queue in queues)
 	{
 		if(queues[queue] == "")
 			continue
 
-		if( $("div#"+queues[queue]).length == 0 )
-			$("div#plan_queue").append("<div class=plan_queue id="+queues[queue]+">"+queues[queue]+"</div>")
+		if( $( "div#"+queues[queue]).length == 0 )
+			$("span#inner_plan_queue").append( "<div class=plan_queue id="+queues[queue]+">"+queues[queue]+"</div>" )
 
 
 	}
+
 
 
 
