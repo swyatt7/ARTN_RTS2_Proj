@@ -140,3 +140,7 @@ p.rts2_device_check
 {
 	text-align:center;
 }
+div.val_row
+{
+  padding:10px;
+}

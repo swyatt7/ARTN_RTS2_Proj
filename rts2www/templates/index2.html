@@ -2,9 +2,9 @@
 
 <html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
-    <title>RTS2QM</title>
+    <title>RTS2 Web App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-
+		
 	{% include "bootstrap_top.html" %}
 	<script src=/static/rts2_vals.js></script>
 	<script>
@@ -19,9 +19,30 @@
 			.fail(function (err){console.log(err)})
 			.done(function(data){console.log("FINISHED")})
 		}
+		function focusrun_click()
+		{
+			do_focusrun();
+		}
+		
+		function exposure_click()
+		{
+			exptime=$("input#exptime").val();
+			console.log(exptime);
+			$.ajax({
+				type: "GET",
+				url: "expose/"+parseFloat(exptime )
+			});
+		}
+	
+		function clearqueue_click()
+		{
+			
+			$.ajax({
+				type: "GET",
+				url: "queues/clear"
+			});
+		}
 
-		
-		
 	</script>
 	
 	
@@ -77,10 +98,11 @@
 			<span class="rts2_label"> auto_loop </span>
 			<span class="rts2_val" device="EXEC" valname="auto_loop", rts2type="bool" style="float:right"/>
 	</div> -->
+	<!--
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> pec_state </span>
 			<span class="rts2_val" device="BIG61" valname="pec_state" style="float:right"/>
-		</div>
+		</div>-->
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> Eve Flats </span>
 			<span class="rts2_val" device="SEL" valname="flat_beginning" rts2type="time"  style="float:right"/>
@@ -90,21 +112,19 @@
 			<span class="rts2_val" device="SEL" valname="flat_ending" rts2type="time"  style="float:right"/>
 		</div>
 
-		<div class="val_row" style="font-size:18pt"> 
-			<span class="rts2_label"> Auto Dome</span>
-			<span class="rts2_val" device="BIG61" valname="dome_auto" rts2type="bool"  style="float:right"/>
-		</div>	<div class="val_row" style="font-size:18pt"> 
+		<!--<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> Airmass</span>
 			<span class="rts2_val" device="BIG61" valname="AIRMASS" rts2type="float"  style="float:right;font-color:red;"/>
-		</div>
+		</div>-->
 
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label"> Target</span>
 			<span class="rts2_val" device="EXEC" valname="current_name" rts2type="none"  style="float:right;font-color:red;color:red"/>
 		</div>
+		<!--
 		<div class="val_row" style="font-size:18pt"> 
 			<span class="rts2_label" id="exp_num" style="color:red">
-		</div>
+		</div> -->
 
 
 		<!--<div id="errmsg"></div>-->
@@ -120,39 +140,32 @@
 		
 
 		</div>
-		<div style="float: left;">
-			{% if queues %}
-		   <div>
-			{% for q in queues %}
-			   <p style="font-family: monospace; font-size: 16pt">Queue: {{ q.name }}</p>
-			   {% if q.queueitems == [] %}
-				<p style="font-family: monospace; fontsize: 12pt">None</p>
-			   {% endif %}
-			   {% if q.queueitems != [] %}
-					{% for qi in q.queueitems%}
-						<p style="font-family: monospace; fontsize: 12pt">{{ qi.name }}</p>
-					{% endfor %}
-					   {% endif %}
-			   <p></p>
-			{% endfor %}
-			</div>
-			{% endif %}
-		</div>
+		
 		<div style="float:left;padding:20px;" id="filter_div">
-			<h2>Filters</h2>
-
+			<div style="min-height: 50px;text-align: center">
+				<h2 style=>Filters</h2>
+				<i id="filterwait" class="fa fa-circle-o-notch fa-spin" style="font-size:24px; padding-left: 0px; display: none; "></i>
+			</div>
+			
 		</div>
+		
 		<div style="float:left;padding:20px;" id="queue_div">
 			<h2>Queues</h2>
 			<div id="plan_queue">
 				<h3>Plan</h3>
 				<span id="inner_plan_queue"></span>
-
+				<div style="padding:10px">
+					<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#clearqueue">Clear Queue</button>
+				</div>
 			</div>
+			
 
+			
 		</div>
-
-		<div "style=float:left;border:solid 1px black;">
+		<div id="latest_image_div">
+			<img id="latest_image" style="float: left;" src=static/latest.jpg/ height=500px width=500px>
+		</div>
+		<!--<div "style=float:left;border:solid 1px black;">-->
 		<span class="rts2_val"></span>
 		</div>
 		<div style="float:right">
@@ -176,14 +189,92 @@
 		</div>	
 			
 			<!--<textarea id="rts2_messages" readonly rows=10 cols=60 style="position:absolute;bottom:10px;right:10px"></textarea>-->
-			<div id="rts2_messages" style="overflow:scroll;border:solid 1px black;height:400px;width:600px;position:absolute;bottom:10px;right:10px"></div>
+	<div id="rts2_messages" style="overflow:scroll;border:solid 1px black;height:400px;width:600px;position:absolute;bottom:10px;right:10px"></div>
+	</div>
+
+	<div style="clear:left; padding:15px">
+		<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Focus Run</button>
 	</div>
 
 <!--	<div style="clear:left;">
 <h1>Telescope Status</h1>-->
-
+	<div id="modal_container">
+	<div class="modal fade" id="myModal" role="dialog">
+	    <div class="modal-dialog modal-sm">
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal">&times;</button>
+	          <h4 class="modal-title">Focus Run</h4>
+	        </div>
+	        <div class="modal-body">
+	          <p>Are you sure you want to start a focusrun this will interrupt the queue!</p>
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	          <button type="button" onclick="focusrun_click()" class="btn btn-default" data-dismiss="modal">Continue</button>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
 	</div>
 
+
+
+	<div style="clear:left; padding:15px">
+		<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#testimage">Test Image</button>
+		
+	</div>
+<!--	<div style="clear:left;">
+<h1>Telescope Status</h1>-->
+	<div id="modal_container">
+	  <div class="modal fade" id="testimage" role="dialog">
+	    <div class="modal-dialog modal-sm">
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal">&times;</button>
+	          <h4 class="modal-title">Test Exposure</h4>
+	        </div>
+	        <div class="modal-body">
+	          <p>Are you sure you want to start a test exposure, this will interrupt the queue!</p>
+		  exp time [s]<input type="text" id="exptime"></input>
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	          <button type="button" onclick="exposure_click()" class="btn btn-default" data-dismiss="modal">Continue</button>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	</div>
+
+
+<div id="modal_container">
+	  <div class="modal fade" id="clearqueue" role="dialog">
+	    <div class="modal-dialog modal-sm">
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal">&times;</button>
+	          <h4 class="modal-title">Clear The Queue</h4>
+	        </div>
+	        <div class="modal-body">
+	          <p>Are you sure you want to clear, this will remove all items from the queue!</p>
+		  
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	          <button type="button" onclick="clearqueue_click()" class="btn btn-default" data-dismiss="modal">Clear</button>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	</div>
+
+
+</div>
+	<a href="http://bigpop/tcs/tcs.html" target="_blank"><h1 style="clear:left;padding-left:20px;display:inline" >TCS GUI</h1></a>
 </body>
 
 </html>

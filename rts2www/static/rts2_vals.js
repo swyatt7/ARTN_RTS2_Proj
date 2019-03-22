@@ -79,9 +79,9 @@ $.ajax
 			}
 			else
 			{
-				console.log("There was a problem getting rts2 data");
+				//console.log("There was a problem getting rts2 data");
 				//console.log(data);
-				$("div#errmsg").text("Could not get device "+dev+", is RTS2 on?")
+				//$("div#errmsg").text("Could not get device "+dev+", is RTS2 on?")
 			}
 
 
@@ -95,23 +95,57 @@ $.ajax
 .always( function() {setTimeout(get_rts2, 5000 )} )
 }
 
+function reload_image()
+{
+	d=new Date()
+	$("img#latest_image").attr("src", "image/last.jpg?"+d.getDate())
+	setTimeout( reload_image, 5000 )
+}
 
 function do_filters(data)
 {
 	var filters = data["W0"]["d"]["filter_names"][1].split(" ");
-	var current_filter = data["W0"]["d"]["loadedFilter"][1]
+	var current_filter = data["W0"]["d"]["loadedFilter"][1];
+	
 	for(filter in filters)
 	{
 		if(filters[filter] == "")
 			continue
 
 		if( $("div#"+filters[filter]).length == 0 )
-			$("div#filter_div").append("<div class='filter' id="+filters[filter]+">"+filters[filter]+"</div>")
+		{
+			$("<div class='filter' id="+filters[filter]+">"+filters[filter]+"</div>").appendTo("div#filter_div")
+			.css("cursor", "pointer")
+			.on("dblclick", function(evt) 
+			{
+				console.log(evt)
+				console.log("Moving to filter "+ evt.target.id )
+				$("i#filterwait").css("display", "inline-flex")
+				$.ajax({
+					type: "GET",
+					url: "filters/"+evt.target.id
+				}).fail(function(jqXHR, textStatus, errorThrown){
+					console.log("Filter move failed");
+					console.log(jqXHR);
+					console.log(textStatus);
+					console.log(errorThrown);
+				}).done(function()
+				{
+					console.log("filterwheel success")
+					$("i#filterwait").css("display", "none")
+				})
+				
+			})
+		}
+		else
+			$("div#"+filters[filter]).css("background-color", "none")
 
 		if(filters[filter] == current_filter)
 			$("div#"+current_filter).css("background-color", "lightgreen")
 		else
-			$("div#"+current_filter).css("background-color", "none")
+		{
+			$("div#"+filters[filter]).css("background-color", "transparent")
+		}
 
 	}
 }
@@ -139,6 +173,30 @@ function do_queues(data)
 
 }
 
+function do_focusrun()
+{
+	$.ajax
+	({
+	  type: "GET",
+	  url: "focus/focusrun",
+	  dataType: 'json',
+	  withCredentials : true,
+	}).done(function(evt) {console.log("focusrun success")})
+
+}
+
+function do_exposure(exptime)
+{
+	$.ajax
+	({
+	  type: "GET",
+	  url: "exposure/"+parseFloat(exptime),
+	  dataType: 'json',
+	  withCredentials : true,
+	}).done(function(evt) {console.log("exp success")})
+
+}
+
 function get_messages(num)
 {
 	$.getJSON("db/message_json/"+num,function(data)
@@ -156,7 +214,7 @@ function get_messages(num)
 		{	
 			lastmsg_time = new Date("2000-01-01 00:00:00")
 		}
-		for(ii in data.reverse())
+		for(ii in data)
 		{
 			//var current_messages= $("p#rts2_messages").val()
 			//divsel.append($("p").text(data[ii].time+": "+data[ii].message+"\n").addClass(data[ii].type))
@@ -196,6 +254,7 @@ function main()
 		}
 	)
 
+	reload_image();
 	get_rts2();
 	show_exp_num();
 	get_messages(50);
@@ -264,4 +323,5 @@ function change_rts2_state(state)
 		url: "rts2state/"+state,
 	})
 }
+
 

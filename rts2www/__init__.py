@@ -1,5 +1,5 @@
 from flask import Flask, send_file, jsonify
-from flask import render_template
+from flask import render_template, redirect, url_for
 from flask import request
 from flask_basicauth import BasicAuth
 import requests
@@ -16,6 +16,9 @@ from astropy.coordinates import Angle
 from astropy import units as u
 import sys
 from rts2solib import asteroid, stellar, rts2comm, so_exposure, load_from_script, queue
+from rts2solib.big61filters import filter_set
+from rts2solib.display_image import to_jpg
+
 from rts2solib.db import message as rts2db_messages
 from rts2solib.db import rts2_images, rts2_observations, rts2_targets
 import subprocess
@@ -53,6 +56,240 @@ app.config['BASIC_AUTH_USERNAME'] = CONFIG["username"]
 app.config['BASIC_AUTH_PASSWORD'] = CONFIG['password']
 basic_auth = BasicAuth( app )
 
+
+@app.route("/test")
+def _test():
+    return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
+            passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=False, queues=[])
+
+@app.route('/')
+@app.route('/home')
+def home():
+    queues = []
+    importRTS2=False
+    #if importRTS2:
+        #queues = populaterts2queues()
+    return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
+            passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2, queues=queues)
+
+@app.route("/rts2state/<state>")
+@basic_auth.required
+def change_state(state):
+    commer = rts2comm()
+    if state.lower() in ['on', 'off', 'standby']:
+        commer.set_state(state)
+        resp = "state set to {}".format(state)
+    else:
+        resp = "bad state {}".format(state)
+    return resp
+
+
+@app.route("/drivers/<driver>/<action>")
+@basic_auth.required
+def driver_actions(driver, action):
+    cmd_errors=None
+    proc_errors=None
+    retncode = None
+    success = True
+    if driver.upper() in ['C0', 'BIG61', 'EXEC', 'SEL']:
+        if action.lower() == "start":
+            retncode = subprocess.call(["rts2-start", driver.upper()])
+
+        elif action.lower() == "stop":
+            retncode = subprocess.call(["rts2-stop", driver.upper()])
+
+        elif action.lower() == "restart":
+            print("restart driver")
+            retncode = subprocess.call(["rts2-stop", driver.upper()])
+            #if retncode == 0:
+            retncode = subprocess.call(["rts2-start", driver.upper()])
+        else:
+            cmd_errors = "Bad action {}".format(action)
+            success=False
+
+
+    else:
+        cmd_errors = "Bad driver name {}".format(driver)
+        success = False
+    if retncode is not None:
+        if retncode != 0:
+            retncode_errors = "Bad return code {}".format(retncode)
+            success = False
+
+
+
+    return jsonify({"cmd_errors":cmd_errors, "proc_errors":proc_errors, "success":success, "retncode":retncode})
+
+
+@app.route("/rts2scripts")
+@basic_auth.required
+def rts2scripts():
+    commer=rts2comm()
+    try:
+        target_name = commer.get_rts2_value("EXEC", "current_name").value
+        current_exp_num = commer.get_rts2_value("C0", "script_exp_num").value
+    except Exception as err:
+        return jsonify({"total_num_exps": "???", "script_exp_num":"???"  })
+
+    if target_name == "":
+        exps=0
+    else:
+        try:
+            script = load_from_script(target_name)
+        except Exception as err:
+            return jsonify({"total_num_exps": "???", "script_exp_num":"???"  })
+
+        exps=0
+        for expset in script["obs_info"]:
+            exps+=int(expset["amount"])
+    return jsonify({"total_num_exps": exps, "script_exp_num":current_exp_num  })
+
+@app.route("/focus/focusrun")
+@basic_auth.required
+def dofocus():
+    commer=rts2comm()
+    focusid = 2572 #should be in config
+    ret = commer.executeCommand( "EXEC", "now 2572" )
+    return jsonify({"response":ret})
+
+
+@app.route("/expose/<exptime>")
+@basic_auth.required
+def doexposure(exptime):
+    commer=rts2comm()
+    try:
+        commer.setValue("C0", "exposure", float(exptime))
+        ret = commer.executeCommand( "EXEC", "now 2578" ) 
+    except Excption as err:
+        ret = err
+
+    return jsonify({"response":ret})
+@app.route('/device/<name>')
+@basic_auth.required
+def get_device(name=None):
+    commer = rts2comm()
+    return json.dumps( commer.get_device_info() )
+
+
+@app.route("/filters/<Filter>")
+def goto_filter(Filter):
+    filts = filter_set()
+    filter_num = filts[Filter]
+    commer = rts2comm()
+    resp = commer.setValue("W0", "filter", filter_num, True )
+    return jsonify({"response": resp})
+
+@app.route('/device')
+@basic_auth.required
+def get_all_devices():
+    """Get the rts2 values for all the devices in RTS2 and put them in
+    one big json."""
+    commer = rts2comm()
+    try:
+        jdata = commer._getall()
+    except Exception as err:
+        jdata = {"error": str(err)}
+
+    jdata['rts2_status'] = commer.get_state()
+    return json.dumps( jdata )
+
+
+@app.route('/device/set/<device>/<name>/<value>')
+@basic_auth.required
+def set_rts2_value(device, name, value):
+    commer=rts2comm()
+    resp = commer.setValue(device, name, value)
+    return jsonify({"response":resp})
+
+
+@app.route('/queuestart')
+@basic_auth.required
+def rts2_queue_start():
+    """Easy way set all the parameters for starting
+    queue observing. """
+    commer = rts2comm()
+    commer.set_rts2_value("SEL", "plan_queing", 3)
+    commer.set_rts2_value("SEL", "queue_only", True)
+    commer.set_rts2_value("BIG61", "pec_state", 1)
+    commer.set_rts2_value("EXEC", "auto_loop", False)
+
+
+@app.route('/lastimg')
+@basic_auth.required
+def download_lastimg():
+    """Use C0.last_img_path to downlaod the most recent image."""
+    jdata = _get_device("C0")
+    return send_file(json.loads(jdata.text)["d"]["last_img_path"][1])
+
+@app.route('/queues/<action>')
+@basic_auth.required
+def _queues(action):
+
+    try:
+        if action == "clear":
+            q=queue.Queue("plan")
+            q.load()
+            q.clear()
+            resp="No Error"
+    except Exeption as err:
+        resp = str(err)
+
+    return jsonify({"response": resp})
+
+
+
+@app.route('/weather/boltwood.json')
+@basic_auth.required
+def boltwood_json():
+    try:
+        r = requests.get("https://www.lpl.arizona.edu/~css/bigelow/boltwoodlast.json")
+        jdata = json.loads( r.text )
+        if jdata['iCloud'] == 1:
+            jdata['cloud_state'] ='Clear'
+        elif jdata['iCloud'] == 2:
+            jdata['cloud_state'] ='Partly Cloudy'
+        elif jdata['iCloud'] == 3:
+            jdata['cloud_state'] ='Cloudy'
+
+        if jdata['iDaylight'] == 3:
+            jdata['day_state'] = "Day"
+        elif jdata['iDaylight'] == 2:
+            jdata['day_state'] = "Dusk"
+        elif jdata['iDaylight'] == 1:
+            jdata['day_state'] = "Night"
+
+        jdata = json.dumps(jdata)
+
+    except Exception as err:
+        jdata = json.dumps({"error": str(err)})
+    return jdata
+
+@app.route("/image/last.jpg")
+def lastimg():
+    commer = rts2comm()
+    fname = commer.getValue("C0", "last_image", True)
+    if fname == "":
+        return redirect(url_for("static", filename="noimg.jpg"))
+    try:
+        img = to_jpg(fname)
+    except FileNotFoundError as err:
+        return redirect(url_for("static", filename="noimg.jpg"))
+    img.save(os.path.join(APP_ROOT, "static","latest.jpg"))
+    return redirect(url_for("static", filename="latest.jpg"))
+
+
+@app.route('/db/message_json/<num>', methods=['GET'])
+def dbmessages_json(num=20):
+    #return jsonify([{"message":"foo", "time":str(datetime.datetime.now()), "type":4}])
+    msg=rts2db_messages()
+    messages = msg.query().order_by(msg._rowdef.message_time.desc())[:num]
+    print(messages[0].message_time)
+    msg_dict = [{"message": x.message_string, "time": str(x.message_time), "type": x.message_type} for x in messages]
+    return jsonify(msg_dict)
+
+
+if __name__ == '__main__':
+    app.run( host='0.0.0.0', port=1080, debug=True )
 
 #try:
 #    prx = rts2.createProxy( url='http://localhost:8889', username=CONFIG["username"], password=CONFIG["password"])
@@ -314,20 +551,7 @@ basic_auth = BasicAuth( app )
 #    return render_template('index.html', files=getuploads(), importRTS2=importRTS2 )
 #
 
-@app.route("/test")
-def _test():
-    return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
-            passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=False, queues=[])
 
-@app.route('/')
-@app.route('/home')
-def home():
-    queues = []
-    importRTS2=False
-    #if importRTS2:
-        #queues = populaterts2queues()
-    return render_template("index2.html", username=app.config['BASIC_AUTH_USERNAME'],
-            passwd=app.config['BASIC_AUTH_PASSWORD'], importRTS2=importRTS2, queues=queues)
 
     #
 #@app.route('/about')
@@ -368,14 +592,7 @@ def home():
 #   return render_template('nightlyreport.html', report = report) 
 #
 #
-@app.route('/db/message_json/<num>', methods=['GET'])
-def dbmessages_json(num=20):
-    #return jsonify([{"message":"foo", "time":str(datetime.datetime.now()), "type":4}])
-    msg=rts2db_messages()
-    messages = msg.query().order_by(msg._rowdef.message_time.desc())[:num]
-    print(messages[0].message_time)
-    msg_dict = [{"message": x.message_string, "time": str(x.message_time), "type": x.message_type} for x in messages]
-    return jsonify(msg_dict)
+
 #
 #
 #@app.route('/dbmessages', methods=['GET'])
@@ -524,164 +741,4 @@ def dbmessages_json(num=20):
 # Begin flask functions
 
 
-@app.route("/rts2state/<state>")
-@basic_auth.required
-def change_state(state):
-    commer = rts2comm()
-    if state.lower() in ['on', 'off', 'standby']:
-        commer.set_state(state)
-        resp = "state set to {}".format(state)
-    else:
-        resp = "bad state {}".format(state)
-    return resp
 
-
-@app.route("/drivers/<driver>/<action>")
-@basic_auth.required
-def driver_actions(driver, action):
-    cmd_errors=None
-    proc_errors=None
-    retncode = None
-    success = True
-    if driver.upper() in ['C0', 'BIG61', 'EXEC', 'SEL']:
-        if action.lower() == "start":
-            retncode = subprocess.call(["rts2-start", driver.upper()])
-
-        elif action.lower() == "stop":
-            retncode = subprocess.call(["rts2-stop", driver.upper()])
-
-        elif action.lower() == "restart":
-            print("restart driver")
-            retncode = subprocess.call(["rts2-stop", driver.upper()])
-            #if retncode == 0:
-            retncode = subprocess.call(["rts2-start", driver.upper()])
-        else:
-            cmd_errors = "Bad action {}".format(action)
-            success=False
-
-
-    else:
-        cmd_errors = "Bad driver name {}".format(driver)
-        success = False
-    if retncode is not None:
-        if retncode != 0:
-            retncode_errors = "Bad return code {}".format(retncode)
-            success = False
-
-
-
-    return jsonify({"cmd_errors":cmd_errors, "proc_errors":proc_errors, "success":success, "retncode":retncode})
-
-
-@app.route("/rts2scripts")
-@basic_auth.required
-def rts2scripts():
-    commer=rts2comm()
-    try:
-        target_name = commer.get_rts2_value("EXEC", "current_name").value
-        current_exp_num = commer.get_rts2_value("C0", "script_exp_num").value
-    except Exception as err:
-        return jsonify({"total_num_exps": "???", "script_exp_num":"???"  })
-
-    if target_name == "":
-        exps=0
-    else:
-        try:
-            script = load_from_script(target_name)
-        except Exception as err:
-            return jsonify({"total_num_exps": "???", "script_exp_num":"???"  })
-
-        exps=0
-        for expset in script["obs_info"]:
-            exps+=int(expset["amount"])
-    return jsonify({"total_num_exps": exps, "script_exp_num":current_exp_num  })
-
-
-@app.route('/device/<name>')
-@basic_auth.required
-def get_device(name=None):
-    commer = rts2comm()
-    return json.dumps( commer.get_device_info() )
-
-
-@app.route('/device')
-@basic_auth.required
-def get_all_devices():
-    """Get the rts2 values for all the devices in RTS2 and put them in
-    one big json."""
-    commer = rts2comm()
-    try:
-        jdata = commer._getall()
-    except Exception as err:
-        jdata = {"error": str(err)}
-
-    jdata['rts2_status'] = commer.get_state()
-    return json.dumps( jdata )
-
-
-@app.route('/device/set/<device>/<name>/<value>')
-@basic_auth.required
-def set_rts2_value(device, name, value):
-    _set_rts2_value(device, name, value)
-
-
-@app.route('/queuestart')
-@basic_auth.required
-def rts2_queue_start():
-    """Easy way set all the parameters for starting
-    queue observing. """
-    commer = rts2comm()
-    commer.set_rts2_value("SEL", "plan_queing", 3)
-    commer.set_rts2_value("SEL", "queue_only", True)
-    commer.set_rts2_value("BIG61", "pec_state", 1)
-    commer.set_rts2_value("EXEC", "auto_loop", False)
-
-
-@app.route('/lastimg')
-@basic_auth.required
-def download_lastimg():
-    """Use C0.last_img_path to downlaod the most recent image."""
-    jdata = _get_device("C0")
-    return send_file(json.loads(jdata.text)["d"]["last_img_path"][1])
-
-@app.route('/queues/<action>')
-@basic_auth.required
-def _queues(action):
-
-    if action == "clear":
-        q=queue.Queue("plan")
-        q.load()
-        q.clear()
-
-    return ""
-
-
-@app.route('/weather/boltwood.json')
-@basic_auth.required
-def boltwood_json():
-    try:
-        r = requests.get("https://www.lpl.arizona.edu/~css/bigelow/boltwoodlast.json")
-        jdata = json.loads( r.text )
-        if jdata['iCloud'] == 1:
-            jdata['cloud_state'] ='Clear'
-        elif jdata['iCloud'] == 2:
-            jdata['cloud_state'] ='Partly Cloudy'
-        elif jdata['iCloud'] == 3:
-            jdata['cloud_state'] ='Cloudy'
-
-        if jdata['iDaylight'] == 3:
-            jdata['day_state'] = "Day"
-        elif jdata['iDaylight'] == 2:
-            jdata['day_state'] = "Dusk"
-        elif jdata['iDaylight'] == 1:
-            jdata['day_state'] = "Night"
-
-        jdata = json.dumps(jdata)
-
-    except Exception as err:
-        jdata = json.dumps({"error": str(err)})
-    return jdata
-
-
-if __name__ == '__main__':
-    app.run( host='0.0.0.0', port=1080, debug=True )
