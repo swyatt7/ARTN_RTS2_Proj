@@ -24,6 +24,8 @@ from rts2solib.db import rts2_images, rts2_observations, rts2_targets
 import subprocess
 import datetime
 
+
+
 #from rts2.queue import Queue
 
 #global importRTS2
@@ -91,7 +93,7 @@ def driver_actions(driver, action):
     proc_errors=None
     retncode = None
     success = True
-    if driver.upper() in ['C0', 'BIG61', 'EXEC', 'SEL']:
+    if driver.upper() in ['C0', 'BIG61', 'EXEC', 'SEL', "W0"]:
         if action.lower() == "start":
             retncode = subprocess.call(["rts2-start", driver.upper()])
 
@@ -271,11 +273,12 @@ def lastimg():
     if fname == "":
         return redirect(url_for("static", filename="noimg.jpg"))
     try:
-        img = to_jpg(fname)
+        img = to_jpg("/tmp/m.fits")
     except FileNotFoundError as err:
         return redirect(url_for("static", filename="noimg.jpg"))
-    img.save(os.path.join(APP_ROOT, "static","latest.jpg"))
-    return redirect(url_for("static", filename="latest.jpg"))
+    #img.save(os.path.join(APP_ROOT, "static","latest.jpg"))
+    #return redirect(url_for("static", filename="latest.jpg"))
+    return send_file(img, mimetype="image/jpg")
 
 
 @app.route('/db/message_json/<num>', methods=['GET'])

@@ -22,10 +22,38 @@ $.ajax
 			$("h4#rts2_status").text(err);
 
 		}
-		display_focus(data);
-		check_drivers(data);
-		do_filters(data);
-		do_queues(data);
+		try
+		{
+			display_focus(data);
+		}
+		catch(err)
+		{
+			console.log("Problem with display_focus ", err);
+		}
+		try
+		{
+			check_drivers(data);
+		}
+		catch(err)
+		{
+			console.log("Problem with check_drivers", err)
+		}
+		try
+		{
+			do_filters(data);
+		}
+		catch(err)
+		{
+			console.log("Problem with do_filters", err)
+		}
+		try
+		{
+			do_queues(data);
+		}
+		catch(err)
+		{
+			console.log("Problem with do_queues", err);
+		}
 
 		$( "span.rts2_val" ).each(function(index)
 		{
@@ -159,11 +187,14 @@ function do_queues(data)
 
 	for(queue in queues)
 	{
+		var clean_queue = queues[queue].replace(/\(/g, "_");
+		clean_queue = clean_queue.replace(/\)/g, "_");
+		console.log(clean_queue)
 		if(queues[queue] == "")
 			continue
 
-		if( $( "div#"+queues[queue]).length == 0 )
-			$("span#inner_plan_queue").append( "<div class=plan_queue id="+queues[queue]+">"+queues[queue]+"</div>" )
+		if( $( "div#"+clean_queue).length == 0 )
+			$("span#inner_plan_queue").append( "<div class=plan_queue id="+clean_queue+">"+queues[queue]+"</div>" )
 
 
 	}
@@ -254,7 +285,7 @@ function main()
 		}
 	)
 
-	reload_image();
+	//reload_image();
 	get_rts2();
 	show_exp_num();
 	get_messages(50);
