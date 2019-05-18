@@ -189,7 +189,6 @@ function do_queues(data)
 	{
 		var clean_queue = queues[queue].replace(/\(/g, "_");
 		clean_queue = clean_queue.replace(/\)/g, "_");
-		console.log(clean_queue)
 		if(queues[queue] == "")
 			continue
 
