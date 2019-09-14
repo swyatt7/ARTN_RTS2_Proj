@@ -1,3 +1,6 @@
+last_target = null;
+tel_layer = null;
+
 function get_rts2()
 {
 
@@ -44,7 +47,7 @@ $.ajax
 		}
 		catch(err)
 		{
-			console.log("Problem with do_filters", err)
+			//console.log("Problem with do_filters", err)
 		}
 		try
 		{
@@ -53,6 +56,23 @@ $.ajax
 		catch(err)
 		{
 			console.log("Problem with do_queues", err);
+		}
+		try
+		{
+			target_change(data);
+		}
+		catch(err)
+		{
+			console.log("Problem with target_change", err);
+		}
+		update_aladin(data);
+		try
+		{
+			//update_aladin(data);
+		}
+		catch(err)
+		{
+			console.log("Problem with update_aladin", err);
 		}
 
 		$( "span.rts2_val" ).each(function(index)
@@ -127,7 +147,7 @@ function reload_image()
 {
 	d=new Date()
 	$("img#latest_image").attr("src", "image/last.jpg?"+d.getDate())
-	setTimeout( reload_image, 5000 )
+	setTimeout( reload_image, 30000 )
 }
 
 function do_filters(data)
@@ -178,13 +198,73 @@ function do_filters(data)
 	}
 }
 
+function update_aladin(data)
+{
+	var lst = parseFloat(data["BIG61"]["d"]["LST"][1]);
+	var tel_ra = parseFloat(data["BIG61"]["d"]["TEL"][1]['ra']);
+	var tel_dec = parseFloat(data["BIG61"]["d"]["TEL"][1]['dec']);
+	var lat = 32.2;
+
+	//Track zenith
+	aladin.gotoRaDec(lst, lat);
+	if(tel_layer != null)
+	{
+		aladin.removeLayers();
+	}
+	var dec_overlay = A.graphicOverlay({color: '#ee2345', lineWidth: 1});
+	var ra_overlay = A.graphicOverlay({color: '#ee2345', lineWidth: 1});
+	aladin.addOverlay(dec_overlay);
+	aladin.addOverlay(ra_overlay);
+
+	var coords = [];
+	var ii=0;
+	var jj=0;
+
+	//constant lines of Dec
+	for (var dec=-80; dec<=60; dec+=20)
+	{
+		coords[jj]= [];
+		ii=0;
+		for(var ra=lst-15*4; ra<=lst+15*4; ra+=5)
+		{
+
+			coords[jj][ii] = [ra, dec];
+			ii++;
+
+		}
+		dec_overlay.add( A.polyline(coords[jj]) );
+		jj++;
+	}
+
+
+	//constant lines of ra
+	coords = [];
+	jj=0;
+	for(var ra=lst-15*4; ra<=lst+15*4; ra+=20)
+	{
+		coords[jj]= [];
+		ii=0;
+		for (var dec=-20; dec<=60; dec+=5)
+		{
+			coords[jj][ii] = [ra, dec];
+			ii++;
+		}
+		dec_overlay.add( A.polyline(coords[jj]) );
+		jj++;
+	}
+
+	tel_layer = A.graphicOverlay({color: 'red', lineWidth: 3});
+	aladin.addOverlay(tel_layer);
+	tel_layer.add( A.circle(tel_ra, tel_dec, 1));
+	//console.log(tel_overlay);
+
+}
 
 function do_queues(data)
 {
 
 	var queues = data["SEL"]["d"]["plan_names"][1];
 	$("span#inner_plan_queue").empty();
-
 	for(queue in queues)
 	{
 		var clean_queue = queues[queue].replace(/\(/g, "_");
@@ -198,10 +278,37 @@ function do_queues(data)
 
 	}
 
+}
 
+function target_change(data)
+{
+	if(last_target == null)
+		last_target = data["EXEC"]["d"]["current_name"][1];
+
+	if (data["EXEC"]["d"]["current_name"][1] != last_target)
+	{
+		$("div#exp_count").fadeIn(100).fadeOut(100)
+			.fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100)
+			.fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100)
+			.fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100)
+			.fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100)
+			.fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeIn(100)
+			.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+		last_target = data["EXEC"]["d"]["current_name"][1];
+	}
 
 
 }
+
 
 function do_focusrun()
 {
@@ -284,7 +391,7 @@ function main()
 		}
 	)
 
-	//reload_image();
+	reload_image();
 	get_rts2();
 	show_exp_num();
 	get_messages(50);

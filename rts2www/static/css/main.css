@@ -101,9 +101,18 @@ div#status_weather
   margin:0px 100px 0px 0px;
 
 }
-span#inner_rts2_status
+span#rts2_status
 {
-  border:solid 1px black;
+  display: inline-block;
+  float: left;
+}
+div.val_row
+{
+  padding:10px;
+}
+span.rts2_label
+{
+  padding:10px;
 }
 
 p.rts2_message
@@ -139,8 +148,4 @@ div.filter
 p.rts2_device_check
 {
 	text-align:center;
-}
-div.val_row
-{
-  padding:10px;
 }

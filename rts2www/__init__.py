@@ -18,9 +18,8 @@ import sys
 from rts2solib import asteroid, stellar, rts2comm, so_exposure, load_from_script, queue
 from rts2solib.big61filters import filter_set
 from rts2solib.display_image import to_jpg
-
 from rts2solib.db import message as rts2db_messages
-from rts2solib.db import rts2_images, rts2_observations, rts2_targets
+from rts2solib.db import rts2_images, rts2_observations, rts2_targets, OrpIface
 import subprocess
 import datetime
 
@@ -266,6 +265,7 @@ def boltwood_json():
         jdata = json.dumps({"error": str(err)})
     return jdata
 
+
 @app.route("/image/last.jpg")
 def lastimg():
     commer = rts2comm()
@@ -278,7 +278,7 @@ def lastimg():
         return redirect(url_for("static", filename="noimg.jpg"))
     #img.save(os.path.join(APP_ROOT, "static","latest.jpg"))
     #return redirect(url_for("static", filename="latest.jpg"))
-    return send_file(img, mimetype="image/jpg")
+    return send_file(img, mimetype="image/jpeg")
 
 
 @app.route('/db/message_json/<num>', methods=['GET'])
@@ -290,6 +290,14 @@ def dbmessages_json(num=20):
     msg_dict = [{"message": x.message_string, "time": str(x.message_time), "type": x.message_type} for x in messages]
     return jsonify(msg_dict)
 
+
+
+@app.route('/db/orp/byname', methods=['POST'])
+def dborpname(name):
+    orp = OrpIface()
+    dbresp = orp.query_name().all()
+
+    return jsonify(dbresp)
 
 if __name__ == '__main__':
     app.run( host='0.0.0.0', port=1080, debug=True )
