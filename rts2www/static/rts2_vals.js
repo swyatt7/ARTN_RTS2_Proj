@@ -65,10 +65,10 @@ $.ajax
 		{
 			console.log("Problem with target_change", err);
 		}
-		update_aladin(data);
+		//update_aladin(data);
 		try
 		{
-			//update_aladin(data);
+			update_aladin(data);
 		}
 		catch(err)
 		{
@@ -200,11 +200,18 @@ function do_filters(data)
 
 function update_aladin(data)
 {
-	var lst = parseFloat(data["BIG61"]["d"]["LST"][1]);
-	var tel_ra = parseFloat(data["BIG61"]["d"]["TEL"][1]['ra']);
-	var tel_dec = parseFloat(data["BIG61"]["d"]["TEL"][1]['dec']);
-	var lat = 32.2;
-
+	try
+	{
+		var lst = parseFloat(data["BIG61"]["d"]["LST"][1]);
+		var tel_ra = parseFloat(data["BIG61"]["d"]["TEL"][1]['ra']);
+		var tel_dec = parseFloat(data["BIG61"]["d"]["TEL"][1]['dec']);
+		var lat = 32.2;
+	}
+	catch(err)
+	{
+		console.log(err)
+		return;
+	}
 	//Track zenith
 	aladin.gotoRaDec(lst, lat);
 	if(tel_layer != null)
@@ -435,9 +442,16 @@ function check_drivers(data)
 
 function display_focus(data)
 {	
-
-	if(!$("input#FOC_DEF").is(":focus"))
-		$("input#FOC_DEF").val(data.F0.d.FOC_DEF[1] );
+	try
+	{
+		if(!$("input#FOC_DEF").is(":focus"))
+			$("input#FOC_DEF").val(data.F0.d.FOC_DEF[1] );
+	}
+	catch(err)
+	{
+		console.log(err);
+		$("input#FOC_DEF").val("IDK!!!!" )
+	}
 }
 
 

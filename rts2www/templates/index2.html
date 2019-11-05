@@ -66,8 +66,8 @@
       </div>
     </header>
 	-->
-	<div style="display:inline-block">
-	<span id="rts2_status" style="float:left">
+	<div style="display:inline-block; ">
+	<span id="rts2_status" style="float:left;padding: 0px 20px 0px 0px; border-right:solid 1px gray">
 		
 		<h1>RTS2 Status</h1>
 		<hr/>
@@ -119,16 +119,18 @@
 				
 
 		
-	<div style="float:left;padding:20px;" id="filter_div">
+	<div style="float:left;padding:0px 20px 0px 20px; bordre-left:1px solid gray; border-right:1px solid gray" id="filter_div">
 		<div style="min-height: 50px;text-align: center">
-			<h2 style=>Filters</h2>
+			<h1 style=>Filters</h1>
+			<hr/>
 			<i id="filterwait" class="fa fa-circle-o-notch fa-spin" style="font-size:24px; padding-left: 0px; display: none; "></i>
 		</div>
 		
 	</div>
 		
-	<div style="float:left;padding:20px;" id="queue_div">
-		<h2>Queues</h2>
+	<div style="float:left;padding: 0px 20px 0px 20px; border-left:1px solid gray" id="queue_div">
+		<h1>Queues</h1>
+		<hr/>
 		<div id="plan_queue">
 			<h3>Plan</h3>
 			<span id="inner_plan_queue"></span>
@@ -142,12 +144,11 @@
 	<span id="latest_image_div" style="float: left">
 		<img id="latest_image" style="float: left;" src=image/last.jpg height=500px width=500px>
 	</span>-->
-	<span style="float: left; padding-left:10px;">
-		<div id="aladin-lite-div" style="width:500px;height:500px;"></div>
+	<span style="padding-left:10px;" id="aladin-span">
+		<div id="aladin-lite-div" style="width:400px;height:400px;"></div>
 		<script type="text/javascript" src="//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
 		<script type="text/javascript">
 			aladin = A.aladin('#aladin-lite-div', {survey: "P/DSS2/color", fov:170, showReticle:false});
-			//var cat = A.catalog({onClick:"showTable"});
 		</script>
 	</span>
 
@@ -159,8 +160,9 @@
 			<!--<textarea id="rts2_messages" readonly rows=10 cols=60 style="position:absolute;bottom:10px;right:10px"></textarea>-->
 	
 	
-<span style="float:left">
-	
+<span style="float:left; padding:0px 0px 0px 20px; border-left:1px solid black" >
+		<h1>Imaging</h1>
+		<hr/>
 		<div style="padding:15px">
 			<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Focus Run</button>
 		</div>
@@ -244,12 +246,12 @@
 
 
 
-		<a href="http://bigpop/tcs/tcs.html" target="_blank"><h1 style="padding-left:20px;display:block" >TCS GUI</h1></a>
 
 	</span>
 
-	<div style="float:right">
+	<div  id="driver-div" >
 		<h1>Driver Status</h1>
+		<hr/>
 		<p class="rts2_device_check" id="centrald"> CENTRALD</p>
 		<p class="rts2_device_check" id="BIG61"><a href="#"  ondblclick="restartd(BIG61)" class="glyphicon glyphicon-repeat"></a> BIG61</p>
 		<p class="rts2_device_check" id="C0"><a href="#" ondblclick="restartd(C0)" class="glyphicon glyphicon-repeat"></a> C0</p>
@@ -268,7 +270,13 @@
 	<div id="rts2_messages" style="overflow:scroll;border:solid 1px black;height:400px;width:600px;position:absolute;bottom:10px;right:10px"></div>
 
 	<div style="display:inline-block">
-		<iframe height=700px width=1500px src="http://scopenet.as.arizona.edu/orp"></iframe>
+		<!--<iframe height=475px width=1200px src="http://scopenet.as.arizona.edu/orp"></iframe>-->
+	</span>
+	<span style="position: absolute; bottom:200px; left:10px" >
+		<h1>Links</h1>
+		<hr/>
+		<a href="http://scopenet.as.arizona.edu/orp" style="display:inline" target="_blank"><h1>ORP</h1></a>
+		<a href="http://bigpop/tcs/tcs.html" target="_blank"><h1 style="padding-left:0px;display:inline" >TCS GUI</h1></a>
 	</span>
 </body>
 

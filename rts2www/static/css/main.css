@@ -149,3 +149,20 @@ p.rts2_device_check
 {
 	text-align:center;
 }
+
+span#aladin-span
+{
+	position:absolute;
+	bottom:10px;
+	right:630px;
+}
+div#driver-div
+{
+	position:absolute;
+	top:0px;
+	right:10px;
+	padding; 0px;
+	border-left:solid 1px gray;
+	
+
+}

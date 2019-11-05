@@ -1,3 +1,5 @@
+#!/usr/bin/python3 
+
 from flask import Flask, send_file, jsonify
 from flask import render_template, redirect, url_for
 from flask import request
@@ -44,7 +46,8 @@ app.config.from_object(__name__)
 
 if len( sys.argv ) == 1:
 
-    CONFIG_PATH = "/home/rts2obs/.mtnops"
+    #TODO stop hardcoding directories!
+    CONFIG_PATH = "/home/scott/.mtnops"
     CONFIG_FILE = "flask_rts2.json"
     CONFIG_FD = open(os.path.join(CONFIG_PATH, CONFIG_FILE))
 
@@ -203,6 +206,24 @@ def set_rts2_value(device, name, value):
     return jsonify({"response":resp})
 
 
+@app.route('/device/set/<device>/<name>', methods=['GET', 'POST'])
+def set_rts2_value_post(device, name):
+    if device in ["BIG61", "C0", "EXEC", "SEL"]:
+
+        commer=rts2comm()
+        data = request.json
+        try:
+            resp=commer.setValue(device, name, data["value"])
+        except Exception as err:
+            resp = {"error": str(err)}
+
+        finally:
+            return jsonify(resp)
+    else:
+        return jsonify({"error": "Bad device name: {}".format(device)})
+
+
+
 @app.route('/queuestart')
 @basic_auth.required
 def rts2_queue_start():
@@ -300,7 +321,7 @@ def dborpname(name):
     return jsonify(dbresp)
 
 if __name__ == '__main__':
-    app.run( host='0.0.0.0', port=1080, debug=True )
+    app.run( host='0.0.0.0', port=1080, debug=False )
 
 #try:
 #    prx = rts2.createProxy( url='http://localhost:8889', username=CONFIG["username"], password=CONFIG["password"])
