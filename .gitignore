@@ -1,0 +1,5 @@
+build/*
+**/*.swp
+**/*.swo
+**/*.pyc
+rts2www/uploads/**

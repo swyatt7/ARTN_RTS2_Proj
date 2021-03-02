@@ -4,6 +4,13 @@ body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #444;
 }
+
+div.main.container#content
+{
+	margin:0px;
+	padding-left:20px;
+	padding-right:40px;
+}
 /*
  * Formatting the header area
  */
@@ -83,4 +90,79 @@ h3 {
 #lefthalf {
   width: 48%;
   float: left;
+}
+
+div#status_weather
+{
+  width:350px;  
+  padding:5px;
+  display:block;
+  float: left; 
+  margin:0px 100px 0px 0px;
+
+}
+span#rts2_status
+{
+  display: inline-block;
+  float: left;
+}
+div.val_row
+{
+  padding:10px;
+}
+span.rts2_label
+{
+  padding:10px;
+}
+
+p.rts2_message
+{
+	font-size:10pt;
+}
+
+p.rts2info
+{
+	color:green;
+}
+
+p.rts2warn
+{
+	color:orange;
+}
+p.rts2error
+{
+	color:red;
+}
+
+div.plan_queue
+
+{
+	text-align:center;
+}
+div.filter
+
+{
+	text-align:center;
+}
+
+p.rts2_device_check
+{
+	text-align:center;
+}
+
+span#aladin-span
+{
+	position:absolute;
+	bottom:10px;
+	right:630px;
+}
+div#driver-div
+{
+	position:absolute;
+	top:0px;
+	right:10px;
+	padding; 0px;
+	border-left:solid 1px gray;
+	
+
 }

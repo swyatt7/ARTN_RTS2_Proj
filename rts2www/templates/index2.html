@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>RTS2 Web App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+
+	{% include "bootstrap_top.html" %}
+	<script src=/static/rts2_vals.js></script>
+	<script>
+		function restartd(driver_name)
+		{
+			console.log(driver_name.id);
+			console.log("drivers/"+driver_name.id+"/restart");
+			$.getJSON("drivers/"+driver_name.id+"/restart", function(data)
+			{
+				console.log(data);
+			})
+			.fail(function (err){console.log(err)})
+			.done(function(data){console.log("FINISHED")})
+		}
+		function focusrun_click()
+		{
+			do_focusrun();
+		}
+		
+		function exposure_click()
+		{
+			exptime=$("input#exptime").val();
+			console.log(exptime);
+			$.ajax({
+				type: "GET",
+				url: "expose/"+parseFloat(exptime )
+			});
+		}
+	
+		function clearqueue_click()
+		{
+			
+			$.ajax({
+				type: "GET",
+				url: "queues/clear"
+			});
+		}
+
+	</script>
+	
+	
+</head>
+
+<body onload="main()">
+	<!--
+    <header>
+      <div class="container">
+        <h1 class="logo">RTS2 Home</h1>
+        <strong><nav>
+          <ul class="menu">
+		  {# <li><a href="{{ url_for('home') }}">Home</a></li> 
+            <li><a href="{{ url_for('index') }}">Queue Manager</a></li>
+            <li><a href="{{ url_for('dbmessages') }}">Messages</a></li>
+	    <li><a href="{{ url_for('nightlyreport')}}">Nightly Report</a></li>
+	    <li><a href="{{ url_for('about') }}">About</a></li>#}
+          </ul>
+        </nav></strong>
+      </div>
+    </header>
+	-->
+	<div style="display:inline-block; ">
+	<span id="rts2_status" style="float:left;padding: 0px 20px 0px 0px; border-right:solid 1px gray">
+		
+		<h1>RTS2 Status</h1>
+		<hr/>
+		<div class="dropdown">
+			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size:18pt">
+				Dropdown button
+			</button>
+			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+				<a class="dropdown-item" href="#" onclick="change_rts2_state('on')">On</a><br>
+				<a class="dropdown-item" href="#" onclick="change_rts2_state('standby')">Standby</a><br>
+				<a class="dropdown-item" href="#" onclick="change_rts2_state('off')">Off</a><br>
+			</div>
+		</div>
+
+
+		<div class="val_row" style="font-size:18pt"> 
+			<span class="rts2_label"> Focus Pos</span>
+			<span style="float:right">
+				<input type="text" name="FOC_DEF" id="FOC_DEF" maxlength=6 size=6 />
+			</span>
+		</div>
+	
+		<div class="val_row" style="font-size:18pt"> 
+			<span class="rts2_label"> Eve Flats </span>
+			<span class="rts2_val" device="SEL" valname="flat_beginning" rts2type="time"  style="float:right"/>
+		</div>
+		<div class="val_row" style="font-size:18pt"> 
+			<span class="rts2_label"> Morn Flats</span>
+			<span class="rts2_val" device="SEL" valname="flat_ending" rts2type="time"  style="float:right"/>
+		</div>
+
+		
+
+		<div class="val_row" id="exp_count" style="font-size:18pt"> 
+			<span class="rts2_label"> Target</span>
+			<span class="rts2_val" device="EXEC" valname="current_name" rts2type="none"  style="float:right;font-color:red;color:red"/>
+		</div>
+		<div  style="font-size:18pt">
+			<span>Exposure #</span>
+			<span class="rts2_val" device="C0" valname="script_exp_num" rts2type="none"  style="font-color:red;color:red"></span>
+			<span>out of</span>
+			<span id="total_exps"></span>
+		</div>
+
+	
+		
+			
+	</span>
+				
+
+		
+	<div style="float:left;padding:0px 20px 0px 20px; bordre-left:1px solid gray; border-right:1px solid gray" id="filter_div">
+		<div style="min-height: 50px;text-align: center">
+			<h1 style=>Filters</h1>
+			<hr/>
+			<i id="filterwait" class="fa fa-circle-o-notch fa-spin" style="font-size:24px; padding-left: 0px; display: none; "></i>
+		</div>
+		
+	</div>
+		
+	<div style="float:left;padding: 0px 20px 0px 20px; border-left:1px solid gray" id="queue_div">
+		<h1>Queues</h1>
+		<hr/>
+		<div id="plan_queue">
+			<h3>Plan</h3>
+			<span id="inner_plan_queue"></span>
+			<div style="padding:10px">
+				<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#clearqueue">Clear Queue</button>
+			</div>
+		</div>	
+	</div>
+	<!--
+		We need to zscale this image to make it usefull. Untile then its gone. 
+	<span id="latest_image_div" style="float: left">
+		<img id="latest_image" style="float: left;" src=image/last.jpg height=500px width=500px>
+	</span>-->
+	<span style="padding-left:10px;" id="aladin-span">
+		<div id="aladin-lite-div" style="width:400px;height:400px;"></div>
+		<script type="text/javascript" src="//aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
+		<script type="text/javascript">
+			aladin = A.aladin('#aladin-lite-div', {survey: "P/DSS2/color", fov:170, showReticle:false});
+		</script>
+	</span>
+
+
+	
+		
+
+			
+			<!--<textarea id="rts2_messages" readonly rows=10 cols=60 style="position:absolute;bottom:10px;right:10px"></textarea>-->
+	
+	
+<span style="float:left; padding:0px 0px 0px 20px; border-left:1px solid black" >
+		<h1>Imaging</h1>
+		<hr/>
+		<div style="padding:15px">
+			<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Focus Run</button>
+		</div>
+
+
+		<div id="modal_container">
+			<div class="modal fade" id="myModal" role="dialog">
+			    <div class="modal-dialog modal-sm">
+			      <div class="modal-content">
+			        <div class="modal-header">
+			          	<button type="button" class="close" data-dismiss="modal">&times;</button>
+			         	<h4 class="modal-title">Focus Run</h4>
+			        </div>
+			        <div class="modal-body">
+			          <p>Are you sure you want to start a focusrun this will interrupt the queue!</p>
+			        </div>
+			        <div class="modal-footer">
+			          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			          <button type="button" onclick="focusrun_click()" class="btn btn-default" data-dismiss="modal">Continue</button>
+			        </div>
+			      </div>
+			    </div>
+			</div>
+		</div>
+		
+
+
+		<div style="padding:15px">
+			<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#testimage">Test Image</button>	
+		</div>
+
+		<div id="modal_container">
+		  	<div class="modal fade" id="testimage" role="dialog">
+		    	<div class="modal-dialog modal-sm">
+		      		<div class="modal-content">
+		        		<div class="modal-header">
+		          			<button type="button" class="close" data-dismiss="modal">&times;</button>
+		          			<h4 class="modal-title">Test Exposure</h4>
+		        		</div>
+		        		<div class="modal-body">
+		          			<p>
+		          				Are you sure you want to start a test exposure, this will interrupt the queue!
+		          			</p>
+		          			<span>
+			  					exp time [s]
+			  				</span>
+			  				<input type="text" id="exptime">
+			  				</input>
+		        		</div>
+		        		<div class="modal-footer">
+		          			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		          			<button type="button" onclick="exposure_click()" class="btn btn-default" data-dismiss="modal">Continue</button>
+		        		</div>
+		      		</div>
+		    	</div>
+		  	</div>
+		</div>
+
+
+
+		<div id="modal_container">
+		 	<div class="modal fade" id="clearqueue" role="dialog">
+		    	<div class="modal-dialog modal-sm">
+		      		<div class="modal-content">
+		        		<div class="modal-header">
+		          			<button type="button" class="close" data-dismiss="modal">&times;</button>
+		          			<h4 class="modal-title">Clear The Queue</h4>
+		        		</div>
+		        		<div class="modal-body">
+		          		<p>Are you sure you want to clear, this will remove all items from the queue!</p>
+		        		</div>
+		        		<div class="modal-footer">
+		          			<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		          			<button type="button" onclick="clearqueue_click()" class="btn btn-default" data-dismiss="modal">Clear</button>
+		        		</div>
+		      		</div>
+		   		</div>
+		 	</div>
+		</div>
+		
+
+
+
+
+	</span>
+
+	<div  id="driver-div" >
+		<h1>Driver Status</h1>
+		<hr/>
+		<p class="rts2_device_check" id="centrald"> CENTRALD</p>
+		<p class="rts2_device_check" id="BIG61"><a href="#"  ondblclick="restartd(BIG61)" class="glyphicon glyphicon-repeat"></a> BIG61</p>
+		<p class="rts2_device_check" id="C0"><a href="#" ondblclick="restartd(C0)" class="glyphicon glyphicon-repeat"></a> C0</p>
+		<p class="rts2_device_check" id="EXEC"><a href="#" ondblclick="restartd(EXEC)" class="glyphicon glyphicon-repeat"></a> EXEC</p>
+		<p class="rts2_device_check" id="F0"><a href="#" ondblclick="restartd(F0)" class="glyphicon glyphicon-repeat"></a> F0</p>
+		<p class="rts2_device_check" id="HTTPD">HTTPD</p>
+		<p class="rts2_device_check" id="IMGP"> IMGP</p>
+		<p class="rts2_device_check" id="SEL"><a href="#" ondblclick="restartd(SEL)" class="glyphicon glyphicon-repeat"></a> SEL</p>
+		<p class="rts2_device_check" id="W0"><a href="#" ondblclick="restartd(W0)" class="glyphicon glyphicon-repeat"></a> W0</p>
+
+	</div>	
+	</div>
+
+
+
+	<div id="rts2_messages" style="overflow:scroll;border:solid 1px black;height:400px;width:600px;position:absolute;bottom:10px;right:10px"></div>
+
+	<div style="display:inline-block">
+		<!--<iframe height=475px width=1200px src="http://scopenet.as.arizona.edu/orp"></iframe>-->
+	</span>
+	<span style="position: absolute; bottom:200px; left:10px" >
+		<h1>Links</h1>
+		<hr/>
+		<a href="http://scopenet.as.arizona.edu/orp" style="display:inline" target="_blank"><h1>ORP</h1></a>
+		<a href="http://bigpop/tcs/tcs.html" target="_blank"><h1 style="padding-left:0px;display:inline" >TCS GUI</h1></a>
+	</span>
+</body>
+
+</html>
